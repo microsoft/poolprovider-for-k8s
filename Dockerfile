@@ -8,7 +8,6 @@ RUN apk add --no-cache git mercurial \
     && go get k8s.io/client-go/kubernetes \
     && go get k8s.io/client-go/rest \
     && go get k8s.io/apimachinery/pkg/apis/meta/v1 \
-    && go get k8s.io/apimachinery/pkg/api/errors \
     && apk del git mercurial
 
 RUN apk --no-cache add curl

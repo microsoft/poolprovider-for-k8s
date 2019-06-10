@@ -25,10 +25,7 @@ func GetPodNames() string {
 		panic(err.Error())
 	}
 
-	var ret string
-	for _, pod := range pods.Items {
-		ret = ret + pod.GetName() + ", "
-	}
+	var ret string = "Number of pods is: " + string(len(pods.Items))
 
 	return ret
 }
