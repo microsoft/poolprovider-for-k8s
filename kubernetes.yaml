@@ -27,7 +27,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: divyanshm/goserver:v1.0
+      - image: divyanshm/goserver:v1.1
         name: goserver
         command: ["/app/main", "-redis", "goserver-redis:6379"]
         ports:
