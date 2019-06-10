@@ -11,18 +11,18 @@ func GetPodNames() string {
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		return err.Error()
 	}
 
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return err.Error()
 	}
 
 	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return err.Error()
 	}
 
 	var ret string = "Number of pods is: " + string(len(pods.Items))
