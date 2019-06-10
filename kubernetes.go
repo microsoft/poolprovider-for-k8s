@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -25,7 +26,9 @@ func GetPodNames() string {
 		return err.Error()
 	}
 
-	var ret string = "Number of pods is: " + string(len(pods.Items))
+	var ret strings.Builder
+	ret.WriteString("Name of one pod is: ")
+	ret.WriteString(pods.Items[0].GetName())
 
-	return ret
+	return ret.String();
 }
