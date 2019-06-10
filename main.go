@@ -34,6 +34,7 @@ func main() {
 	s.HandleFunc("/ping", PingHandler(r))
 	s.HandleFunc("/version", VersionHandler)
 	s.HandleFunc("/payload", PayloadHandler)
+	s.HandleFunc("/kube", KubernetesHandler)
 
 	// Bootstrap logger
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -100,6 +101,32 @@ func PayloadHandler(resp http.ResponseWriter, req *http.Request) {
 
 	log.Printf("Payload: %s", string(body))
 	fmt.Fprintf(resp, "Payload: %s", string(body))
+}
+
+func KubernetesHandler(resp http.ResponseWriter, req *http.Request) {
+	_, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var pods = GetPodNames()
+
+	resp.WriteHeader(http.StatusOK)
+	fmt.Fprintf(resp, "Method: %s\n", req.Method)
+
+	if len(req.Header) > 0 {
+		log.Println("Headers:")
+		fmt.Fprint(resp, "Headers:\n")
+		for key, values := range req.Header {
+			for _, val := range values {
+				log.Printf("%s: %s\n", key, val)
+				fmt.Fprintf(resp, "%s: %s\n", key, val)
+			}
+		}
+	}
+
+	fmt.Fprintf(resp, "Pods: %s", pods)
 }
 
 // EnvOrDefault will read env from the environment.
