@@ -1,62 +1,62 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: simple-webserver
+  name: goserver
   labels:
-    app: simple-webserver
+    app: goserver
   namespace: default
 spec:
   type: NodePort
   ports:
     - port: 8082
   selector:
-    app: simple-webserver
+    app: goserver
     tier: frontend
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: simple-webserver
+  name: goserver
   labels:
-    app: simple-webserver
+    app: goserver
 spec:
   template:
     metadata:
       labels:
-        app: simple-webserver
+        app: goserver
         tier: frontend
     spec:
       containers:
-      - image: andygrunwald/simple-webserver:v1.1.1
-        name: simple-webserver
-        command: ["app", "-redis", "simple-webserver-redis:6379"]
+      - image: divyanshm/goserver:v1.0
+        name: goserver
+        command: ["app", "-redis", "goserver-redis:6379"]
         ports:
         - containerPort: 8082
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: simple-webserver-redis
+  name: goserver-redis
   labels:
-    app: simple-webserver
+    app: goserver
 spec:
   ports:
     - port: 6379
   selector:
-    app: simple-webserver
+    app: goserver
     tier: redis
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: simple-webserver-redis
+  name: goserver-redis
   labels:
-    app: simple-webserver
+    app: goserver
 spec:
   template:
     metadata:
       labels:
-        app: simple-webserver
+        app: goserver
         tier: redis
     spec:
       containers:
@@ -70,10 +70,10 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   labels:
-    app: simple-webserver
-  name: simple-webserver
+    app: goserver
+  name: goserver
   namespace: default
 spec:
   backend:
-    serviceName: simple-webserver
+    serviceName: goserver
     servicePort: 8082
