@@ -1,6 +1,6 @@
-FROM golang:onbuild
+FROM golang:alpine
 
-MAINTAINER Andy Grunwald <andygrunwald@gmail.com>
+MAINTAINER Divyansh Manchanda <divyanshm@gmail.com>
 
 EXPOSE 8082
 ENTRYPOINT ["app"]
