@@ -13,9 +13,9 @@ import (
 
 const (
 	// Name of the application
-	Name = "simple webserver"
+	Name = "divman's GoServer"
 	// Version of the application
-	Version = "1.1.1"
+	Version = "1.0.0"
 )
 
 func main() {
@@ -32,7 +32,6 @@ func main() {
 	s := http.NewServeMux()
 	s.HandleFunc("/", RootHandler)
 	s.HandleFunc("/ping", PingHandler(r))
-	s.HandleFunc("/kill", KillHandler)
 	s.HandleFunc("/version", VersionHandler)
 	s.HandleFunc("/payload", PayloadHandler)
 
@@ -66,31 +65,6 @@ func PingHandler(s Storage) http.HandlerFunc {
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, res)
 	}
-}
-
-// KillHandler handles request to the "/kill" endpoint.
-// Will shut down the webserver immediately (via exit code 1).
-// Only DELETE requests are accepted.
-// Other request methods will throw a HTTP Status Code 405 (Method Not Allowed)
-func KillHandler(resp http.ResponseWriter, req *http.Request) {
-	if req.Method != "DELETE" {
-		resp.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	// We need to send a HTTP Status Code 200 (OK)
-	// to respond that we have accepted the request.
-	// Here we send a chunked response to the requester.
-	flusher, ok := resp.(http.Flusher)
-	if !ok {
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	resp.WriteHeader(http.StatusOK)
-	flusher.Flush()
-
-	// And we kill the server (like requested)
-	os.Exit(1)
 }
 
 // VersionHandler handles request to the "/version" endpoint.
