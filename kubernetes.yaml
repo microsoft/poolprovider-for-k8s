@@ -77,3 +77,16 @@ spec:
   backend:
     serviceName: goserver
     servicePort: 8082
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: goserver
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin # this is a hack, needs proper role assignments
+  apiGroup: rbac.authorization.k8s.io
