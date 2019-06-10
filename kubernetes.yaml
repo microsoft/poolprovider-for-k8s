@@ -29,7 +29,7 @@ spec:
       containers:
       - image: divyanshm/goserver:v1.0
         name: goserver
-        command: ["app", "-redis", "goserver-redis:6379"]
+        command: ["/app/main", "-redis", "goserver-redis:6379"]
         ports:
         - containerPort: 8082
 ---
