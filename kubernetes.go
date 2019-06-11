@@ -58,7 +58,7 @@ spec:
 	var p1 v1.Pod
 	err1 := json.Unmarshal([]byte(podYaml), &p1)
 	if err1 != nil {
-		return err1.Error()
+		return err1.Error() + ", " + podYaml
 	}
 
 	// running the app in the default namespace. Pass namespace to pods method.
