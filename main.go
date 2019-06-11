@@ -34,7 +34,8 @@ func main() {
 	s.HandleFunc("/ping", PingHandler(r))
 	s.HandleFunc("/version", VersionHandler)
 	s.HandleFunc("/payload", PayloadHandler)
-	s.HandleFunc("/kubecreate", KubernetesCreateHandler)
+	s.HandleFunc("/create", KubernetesCreateHandler)
+	s.HandleFunc("/delete", KubernetesDeleteHandler)
 
 	// Bootstrap logger
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -113,6 +114,18 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	var pods = CreatePod()
 
 	fmt.Fprintf(resp, "Pods: %s", pods)
+}
+
+func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
+	podname := req.URL.Query()["podname"][0]
+	if podname == "" {
+		fmt.Fprintf(resp, "Provide pod name as ?podname=somename");
+		return
+	}
+
+	var pods = DeletePod(podname)
+
+	fmt.Fprintf(resp, "Response: %s", pods)
 }
 
 // EnvOrDefault will read env from the environment.

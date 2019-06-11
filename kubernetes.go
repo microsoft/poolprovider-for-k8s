@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ghodss/yaml"
 	
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -69,4 +70,25 @@ func CreatePod() string {
 	}
 
 	return pod.GetName()
+}
+
+func DeletePod(podname string) string {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err.Error()
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err.Error()
+	}
+
+	// running the app in the default namespace. Pass namespace to pods method.
+	podClient := clientset.CoreV1().Pods("default")
+	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
+	if err2 != nil {
+		return "podclient delete error: " + err2.Error()
+	}
+
+	return "Deleted " + podname
 }
