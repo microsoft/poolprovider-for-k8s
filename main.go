@@ -26,16 +26,15 @@ func main() {
 	flag.Parse()
 
 	// Create Redis storage
-	r := NewRedisStorage(*redisFlag)
+	storage := NewRedisStorage(*redisFlag)
 
 	// Define HTTP endpoints
 	s := http.NewServeMux()
-	s.HandleFunc("/", RootHandler)
-	s.HandleFunc("/ping", PingHandler(r))
+	s.HandleFunc("/ping", PingHandler(storage))
 	s.HandleFunc("/version", VersionHandler)
 	s.HandleFunc("/payload", PayloadHandler)
-	s.HandleFunc("/create", KubernetesCreateHandler)
-	s.HandleFunc("/delete", KubernetesDeleteHandler)
+	s.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { KubernetesCreateHandler(w, r, storage) })
+	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r, storage) })
 
 	// Bootstrap logger
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -44,12 +43,6 @@ func main() {
 	// Start HTTP Server with request logging
 	loggingHandler := handlers.LoggingHandler(os.Stdout, s)
 	log.Fatal(http.ListenAndServe(*listenFlag, loggingHandler))
-}
-
-// RootHandler handles requests to the "/" path.
-// It will redirect the request to /ping with a 303 HTTP header
-func RootHandler(resp http.ResponseWriter, req *http.Request) {
-	http.Redirect(resp, req, "/ping", http.StatusSeeOther)
 }
 
 // PingHandler handles request to the "/ping" endpoint.
@@ -104,7 +97,7 @@ func PayloadHandler(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Payload: %s", string(body))
 }
 
-func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
+func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request, s Storage) {
 	_, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
@@ -116,7 +109,7 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Pods: %s", pods)
 }
 
-func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
+func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request, s Storage) {
 	podname := req.URL.Query()["podname"][0]
 	if podname == "" {
 		fmt.Fprintf(resp, "Provide pod name as ?podname=somename");

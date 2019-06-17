@@ -49,11 +49,12 @@ func CreatePod() string {
         securityContext:
           privileged: true
         volumeMounts:
-        - name: daemon-storage
+        - name: agent-pv-storage
           mountPath: /var/lib/docker
       volumes:
-      - name: daemon-storage
-        emptyDir: {}
+      - name: agent-pv-storage
+		persistentVolumeClaim:
+		    claimName: agent-pv-volume2
         `
 
 	var p1 v1.Pod
