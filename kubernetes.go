@@ -54,7 +54,7 @@ func CreatePod() string {
       volumes:
       - name: agent-pv-storage
         persistentVolumeClaim:
-          claimName: agent-pv-volume2
+          claimName: agent-pv-claim2
         `
 
 	var p1 v1.Pod
