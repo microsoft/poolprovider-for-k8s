@@ -1,10 +1,30 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: azuredevops
+  labels:
+    app: goserver
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: azuredevops-pipelineprovider
+subjects:
+  - kind: ServiceAccount
+    name: pipelineprovider
+    namespace: azuredevops
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: goserver
   labels:
     app: goserver
-  namespace: default
+  namespace: azuredevops
 spec:
   type: NodePort
   ports:
@@ -19,6 +39,7 @@ metadata:
   name: goserver
   labels:
     app: goserver
+  namespace: azuredevops
 spec:
   template:
     metadata:
@@ -26,8 +47,9 @@ spec:
         app: goserver
         tier: frontend
     spec:
+      serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/goserver:v1.24
+      - image: divyanshm/goserver:v1.26
         name: goserver
         command: ["/app/main"]
         ports:
@@ -39,21 +61,8 @@ metadata:
   labels:
     app: goserver
   name: goserver
-  namespace: default
+  namespace: azuredevops
 spec:
   backend:
     serviceName: goserver
     servicePort: 8082
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: goserver
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: default
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin # this is a hack, needs proper role assignments
-  apiGroup: rbac.authorization.k8s.io
