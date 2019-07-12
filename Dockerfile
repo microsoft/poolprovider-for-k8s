@@ -1,7 +1,6 @@
 FROM golang:alpine
 
 RUN apk add --no-cache git mercurial \
-    && go get github.com/garyburd/redigo/redis \
     && go get github.com/gorilla/handlers \
     && go get github.com/ghodss/yaml \
     && go get k8s.io/client-go/kubernetes \

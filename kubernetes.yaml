@@ -27,44 +27,11 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: divyanshm/goserver:v1.15
+      - image: divyanshm/goserver:v1.23
         name: goserver
-        command: ["/app/main", "-redis", "goserver-redis:6379"]
+        command: ["/app/main"]
         ports:
         - containerPort: 8082
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: goserver-redis
-  labels:
-    app: goserver
-spec:
-  ports:
-    - port: 6379
-  selector:
-    app: goserver
-    tier: redis
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: goserver-redis
-  labels:
-    app: goserver
-spec:
-  template:
-    metadata:
-      labels:
-        app: goserver
-        tier: redis
-    spec:
-      containers:
-      - image: redis:3-alpine
-        name: redis
-        ports:
-        - containerPort: 6379
-          name: redis
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

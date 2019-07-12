@@ -21,20 +21,16 @@ const (
 func main() {
 	var (
 		listenFlag = flag.String("listen", EnvOrDefault("SIMPLE_WEBSERVER_LISTEN", ":8082"), "Address + Port to listen on. Format ip:port. Environment variable: SIMPLE_WEBSERVER_LISTEN")
-		redisFlag  = flag.String("redis", EnvOrDefault("SIMPLE_WEBSERVER_REDIS", ":6379"), "Address + Port where a redis server is listening. Environment variable: SIMPLE_WEBSERVER_REDIS")
 	)
 	flag.Parse()
 
-	// Create Redis storage
-	storage := NewRedisStorage(*redisFlag)
-
 	// Define HTTP endpoints
 	s := http.NewServeMux()
-	s.HandleFunc("/ping", PingHandler(storage))
+	s.HandleFunc("/ping", PingHandler())
 	s.HandleFunc("/version", VersionHandler)
 	s.HandleFunc("/payload", PayloadHandler)
-	s.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { KubernetesCreateHandler(w, r, storage) })
-	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r, storage) })
+	s.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { KubernetesCreateHandler(w, r) })
+	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
 
 	// Bootstrap logger
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -45,18 +41,9 @@ func main() {
 	log.Fatal(http.ListenAndServe(*listenFlag, loggingHandler))
 }
 
-// PingHandler handles request to the "/ping" endpoint.
-// It will send a PING request to Redis and return the response
-// of the NoSQL database.
-// The response is obvious: "pong" :)
-func PingHandler(s Storage) http.HandlerFunc {
+func PingHandler() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		res, err := s.Ping()
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(resp, err.Error())
-			return
-		}
+		res := "pong"
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, res)
 	}
@@ -97,7 +84,7 @@ func PayloadHandler(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Payload: %s", string(body))
 }
 
-func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request, s Storage) {
+func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	_, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
@@ -109,7 +96,7 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request, s Stor
 	fmt.Fprintf(resp, "Pods: %s", pods)
 }
 
-func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request, s Storage) {
+func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 	podname := req.URL.Query()["podname"][0]
 	if podname == "" {
 		fmt.Fprintf(resp, "Provide pod name as ?podname=somename");
