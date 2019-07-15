@@ -54,7 +54,7 @@ spec:
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/goserver:v1.27
+      - image: divyanshm/goserver:v1.28
         name: goserver
         command: ["/app/main"]
         ports:
