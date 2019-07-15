@@ -65,7 +65,6 @@ func CreatePod() string {
 		return "unmarshal error: " + err1.Error()
 	}
 
-	// running the app in the default namespace. Pass namespace to pods method.
 	podClient := clientset.CoreV1().Pods("azuredevops")
 	pod, err2 := podClient.Create(&p1)
 	if err2 != nil {
@@ -86,7 +85,6 @@ func DeletePod(podname string) string {
 		return err.Error()
 	}
 
-	// running the app in the default namespace. Pass namespace to pods method.
 	podClient := clientset.CoreV1().Pods("azuredevops")
 	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
 	if err2 != nil {
