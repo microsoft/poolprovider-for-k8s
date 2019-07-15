@@ -6,7 +6,7 @@ metadata:
     app: goserver
 ---
 apiVersion: v1
-kind: serviceAccount
+kind: ServiceAccount
 metadata: 
   name: pipelineprovider
 ---
