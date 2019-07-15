@@ -47,9 +47,9 @@ spec:
         app: goserver
         tier: frontend
     spec:
-      serviceAccountName: pipelineprovider
+      serviceAccountName: azuredevops-pipelineprovider
       containers:
-      - image: divyanshm/goserver:v1.26
+      - image: divyanshm/goserver:v1.27
         name: goserver
         command: ["/app/main"]
         ports:
