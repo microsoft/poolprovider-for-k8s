@@ -5,6 +5,11 @@ metadata:
   labels:
     app: goserver
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata: 
+  name: pipelineprovider
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -12,7 +17,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: pipelineprovider
-    namespace: azuredevops
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -49,7 +54,7 @@ spec:
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/goserver:v1.29
+      - image: divyanshm/goserver:v1.30
         name: goserver
         command: ["/app/main"]
         ports:
