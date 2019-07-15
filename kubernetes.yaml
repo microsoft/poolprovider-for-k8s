@@ -9,6 +9,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata: 
   name: pipelineprovider
+  namespace: azuredevops
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -17,7 +18,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: pipelineprovider
-    namespace: default
+    namespace: azuredevops
 roleRef:
   kind: ClusterRole
   name: cluster-admin
