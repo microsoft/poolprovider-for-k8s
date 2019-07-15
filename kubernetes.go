@@ -20,6 +20,9 @@ func CreatePod() string {
 		return err.Error()
 	}
 
+    // If pod is to be created in a different namespace
+	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
+	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=mseng
 	var podYaml = `
     apiVersion: v1
     kind: Pod
