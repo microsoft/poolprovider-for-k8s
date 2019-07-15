@@ -13,7 +13,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: azuredevops-pipelineprovider
+  name: vsts-pipelineprovider
 subjects:
   - kind: ServiceAccount
     name: pipelineprovider
@@ -54,7 +54,7 @@ spec:
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/goserver:v1.30
+      - image: divyanshm/goserver:v1.31
         name: goserver
         command: ["/app/main"]
         ports:
