@@ -8,8 +8,8 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata: 
-  name: pipelineprovider
-  namespace: azuredevops
+  name: pipelineprovider1
+  namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -17,8 +17,8 @@ metadata:
   name: vsts-pipelineprovider
 subjects:
   - kind: ServiceAccount
-    name: pipelineprovider
-    namespace: azuredevops
+    name: pipelineprovider1
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -30,7 +30,6 @@ metadata:
   name: goserver
   labels:
     app: goserver
-  namespace: azuredevops
 spec:
   type: NodePort
   ports:
@@ -45,7 +44,6 @@ metadata:
   name: goserver
   labels:
     app: goserver
-  namespace: azuredevops
 spec:
   template:
     metadata:
@@ -53,7 +51,7 @@ spec:
         app: goserver
         tier: frontend
     spec:
-      serviceAccountName: pipelineprovider
+      serviceAccountName: pipelineprovider1
       containers:
       - image: divyanshm/goserver:v1.31
         name: goserver
@@ -67,7 +65,6 @@ metadata:
   labels:
     app: goserver
   name: goserver
-  namespace: azuredevops
 spec:
   backend:
     serviceName: goserver

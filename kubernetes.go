@@ -53,8 +53,7 @@ func CreatePod() string {
           mountPath: /var/lib/docker
       volumes:
       - name: agent-pv-storage
-        persistentVolumeClaim:
-          claimName: agent-pv-claim2
+        emptyDir: {}
         `
 
 	var p1 v1.Pod
