@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"github.com/ghodss/yaml"
 	
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,62 +11,19 @@ import (
 )
 
 func CreatePod() string {
-	config, err := rest.InClusterConfig()
+	cs, err := getInClusterClientSet()
 	if err != nil {
 		return err.Error()
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err.Error()
-	}
-
-    // If pod is to be created in a different namespace
-	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
-	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=mseng
-	var podYaml = `
-    apiVersion: v1
-    kind: Pod
-    metadata:
-       name: vsts-agent-dind
-    spec:
-      containers:
-      - name: vsts-agent
-        image: microsoft/vsts-agent:ubuntu-16.04-docker-18.06.1-ce-standard
-        env:
-        - name: VSTS_ACCOUNT
-          valueFrom:
-            secretKeyRef:
-              name: vsts
-              key: VSTS_ACCOUNT
-        - name: VSTS_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: vsts
-              key: VSTS_TOKEN
-        - name: VSTS_POOL
-          value: divman
-        - name: DOCKER_HOST
-          value: tcp://localhost:2375
-      - name: dind-daemon
-        image: docker:18.09.6-dind
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - name: agent-pv-storage
-          mountPath: /var/lib/docker
-      volumes:
-      - name: agent-pv-storage
-        emptyDir: {}
-        `
-
+	var podYaml = getDefaultAgentSpecification()
 	var p1 v1.Pod
 	err1 := yaml.Unmarshal([]byte(podYaml), &p1)
 	if err1 != nil {
 		return "unmarshal error: " + err1.Error()
 	}
 
-	podClient := clientset.CoreV1().Pods("azuredevops")
+	podClient := cs.CoreV1().Pods("azuredevops")
 	pod, err2 := podClient.Create(&p1)
 	if err2 != nil {
 		return "podclient create error: " + err2.Error()
@@ -75,21 +33,44 @@ func CreatePod() string {
 }
 
 func DeletePod(podname string) string {
-	config, err := rest.InClusterConfig()
+	cs, err := getInClusterClientSet()
 	if err != nil {
 		return err.Error()
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err.Error()
-	}
+	podClient := cs.CoreV1().Pods("azuredevops")
 
-	podClient := clientset.CoreV1().Pods("azuredevops")
 	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
 	if err2 != nil {
 		return "podclient delete error: " + err2.Error()
 	}
 
 	return "Deleted " + podname
+}
+
+func getInClusterClientSet() (*kubernetes.Clientset, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientset, nil
+}
+
+func getDefaultAgentSpecification() string {
+	// If pod is to be created in a different namespace
+	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
+	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=mseng
+	dat, err := ioutil.ReadFile("agentpods/agent-dind.yaml")
+	if err != nil {
+		return err.Error()
+	}
+
+	var podYaml = string(dat)
+	return podYaml
 }

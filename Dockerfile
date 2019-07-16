@@ -15,5 +15,7 @@ ADD . /app/
 WORKDIR /app
 RUN go build -o main .
 
+COPY agentpods/* agentpods/
+
 EXPOSE 8082
 CMD ["/app/main"]
