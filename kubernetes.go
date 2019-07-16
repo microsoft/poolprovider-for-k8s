@@ -10,13 +10,13 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func CreatePod() string {
+func CreatePod(podname string) string {
 	cs, err := getInClusterClientSet()
 	if err != nil {
 		return err.Error()
 	}
 
-	var podYaml = getDefaultAgentSpecification()
+	var podYaml = getAgentSpecification(podname)
 	var p1 v1.Pod
 	err1 := yaml.Unmarshal([]byte(podYaml), &p1)
 	if err1 != nil {
@@ -62,11 +62,11 @@ func getInClusterClientSet() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-func getDefaultAgentSpecification() string {
+func getAgentSpecification(podname string) string {
 	// If pod is to be created in a different namespace
 	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
-	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=mseng
-	dat, err := ioutil.ReadFile("agentpods/agent-dind.yaml")
+	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=<accountname>
+	dat, err := ioutil.ReadFile("agentpods/" + podname + ".yaml")
 	if err != nil {
 		return err.Error()
 	}
