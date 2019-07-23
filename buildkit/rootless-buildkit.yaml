@@ -4,6 +4,7 @@ metadata:
   labels:
     app: goserver
   name: buildkitd
+  namespace: azuredevops
 spec:
   serviceName: buildkitd
   replicas: 1
@@ -38,6 +39,7 @@ metadata:
   labels:
     app: goserver
   name: buildkitd
+  namespace: azuredevops
 spec:
   ports:
   - port: 1234
