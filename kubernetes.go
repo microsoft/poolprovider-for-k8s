@@ -23,7 +23,6 @@ func CreatePod(podname string) string {
 		return "unmarshal error: " + err1.Error()
 	}
 
-	// this is a useless comment
 	podClient := cs.CoreV1().Pods("azuredevops")
 	pod, err2 := podClient.Create(&p1)
 	if err2 != nil {
