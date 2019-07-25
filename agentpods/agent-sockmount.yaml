@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-    name: vsts-agent-sock
+    generateName: vsts-agent-sock-
 spec:
   containers:
   - name: vsts-agent

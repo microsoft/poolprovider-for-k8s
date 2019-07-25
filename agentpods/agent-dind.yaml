@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-    name: vsts-agent-dind
+    generateName: vsts-agent-
 spec:
   containers:
   - name: vsts-agent
