@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app: goserver
+    app: k8s-poolprovider
   name: buildkitd
   namespace: azuredevops
 spec:
@@ -10,11 +10,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: goserver
+      app: k8s-poolprovider
   template:
     metadata:
       labels:
-        app: goserver
+        app: k8s-poolprovider
         role: buildkit
       annotations:
         container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
@@ -37,7 +37,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: goserver
+    app: k8s-poolprovider
   name: buildkitd
   namespace: azuredevops
 spec:
@@ -45,4 +45,4 @@ spec:
   - port: 1234
     protocol: TCP
   selector:
-    app: goserver
+    app: k8s-poolprovider

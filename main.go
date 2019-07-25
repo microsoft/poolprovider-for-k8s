@@ -8,7 +8,7 @@ import (
 
 const (
 	// Name of the application
-	Name = "Argus"
+	Name = "k8s-poolprovider"
 	// Version of the application
 	Version = "1.0.0"
 )

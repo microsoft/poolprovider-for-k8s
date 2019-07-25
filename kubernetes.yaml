@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: azuredevops
   labels:
-    app: goserver
+    app: k8s-poolprovider
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -42,34 +42,34 @@ roleRef:
 apiVersion: v1
 kind: Service
 metadata:
-  name: goserver
+  name: k8s-poolprovider
   labels:
-    app: goserver
+    app: k8s-poolprovider
 spec:
   type: NodePort
   ports:
     - port: 8082
   selector:
-    app: goserver
+    app: k8s-poolprovider
     tier: frontend
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: goserver
+  name: k8s-poolprovider
   labels:
-    app: goserver
+    app: k8s-poolprovider
 spec:
   template:
     metadata:
       labels:
-        app: goserver
+        app: k8s-poolprovider
         tier: frontend
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/goserver:v2.08
-        name: goserver
+      - image: divyanshm/k8s-poolprovider:v2.08
+        name: k8s-poolprovider
         command: ["/app/main"]
         ports:
         - containerPort: 8082
@@ -78,9 +78,9 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   labels:
-    app: goserver
-  name: goserver
+    app: k8s-poolprovider
+  name: k8s-poolprovider
 spec:
   backend:
-    serviceName: goserver
+    serviceName: k8s-poolprovider
     servicePort: 8082
