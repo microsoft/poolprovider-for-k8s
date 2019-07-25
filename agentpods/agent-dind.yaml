@@ -18,7 +18,10 @@ spec:
           name: vsts
           key: VSTS_TOKEN
     - name: VSTS_POOL
-      value: divman
+      valueFrom:
+        secretKeyRef:
+          name: vsts
+          key: VSTS_POOL
     - name: DOCKER_HOST
       value: tcp://localhost:2375
   - name: dind-daemon

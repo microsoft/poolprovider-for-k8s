@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: {{ .Values.app.name }}
+  name: buildkitd
+  namespace: {{ .Values.app.namespace }}
+spec:
+  serviceName: buildkitd
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+        role: buildkit
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
+        container.seccomp.security.alpha.kubernetes.io/buildkitd: unconfined
+# see buildkit/docs/rootless.md for caveats of rootless mode
+    spec:
+      containers:
+      - name: buildkitd
+        image: moby/buildkit:master-rootless
+        args:
+        - --addr
+        - unix:///run/user/1000/buildkit/buildkitd.sock
+        - --addr
+        - tcp://0.0.0.0:1234
+        - --oci-worker-no-process-sandbox
+        ports:
+        - containerPort: 1234
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.app.name }}
+  name: buildkitd
+  namespace: {{ .Values.app.namespace }}
+spec:
+  ports:
+  - port: 1234
+    protocol: TCP
+  selector:
+    app: {{ .Values.app.name }}
