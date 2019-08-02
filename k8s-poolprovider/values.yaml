@@ -22,6 +22,8 @@ vsts:
   VSTS_ACCOUNT: ""
   VSTS_POOL: default 
 
+config:
+  buildkitPodCount: 1
 
   tls: []
   #  - secretName: chart-example-tls

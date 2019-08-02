@@ -7,7 +7,7 @@ metadata:
   namespace: {{ .Values.app.namespace }}
 spec:
   serviceName: buildkitd
-  replicas: 1
+  replicas: {{ .Values.config.buildkitPodCount }}
   selector:
     matchLabels:
       app: {{ .Values.app.name }}
