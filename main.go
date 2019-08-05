@@ -75,21 +75,30 @@ func StorageSetHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		key := req.URL.Query()["key"]
 		value := req.URL.Query()["value"]
+		fmt.Fprintf(resp, "key is %s, value is %s", key[0], value[0]);
+		if key == nil || key[0] == "" {
+			key[0] = "fu"
+		}
+
+		if value == nil || value[0] == "" {
+			value[0] = "bar"
+		}
+
 		err := s.Set(key[0], value[0])
 		if err != nil {
 			resp.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(resp, err.Error())
+			fmt.Fprintf(resp, "Error" + err.Error())
 			return
 		}
 		resp.WriteHeader(http.StatusOK)
-		fmt.Fprintln(resp, "Value set")
+		fmt.Fprintf(resp, "Value set")
 	}
 }
 
 func PingHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		res := s.Init()
-		
+
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, res)
 	}

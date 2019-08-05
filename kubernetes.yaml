@@ -68,7 +68,7 @@ spec:
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.13
+      - image: divyanshm/k8s-poolprovider:v2.14
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
