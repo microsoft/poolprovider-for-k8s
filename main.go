@@ -88,13 +88,8 @@ func StorageSetHandler(s Storage) http.HandlerFunc {
 
 func PingHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		_, err := s.Ping()
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(resp, err.Error())
-			return
-		}
-		res := "pong"
+		res := s.Init()
+		
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, res)
 	}

@@ -14,7 +14,7 @@ rbac:
 
 image:
   repository: divyanshm/k8s-poolprovider
-  tag: v2.12
+  tag: v2.13
   pullPolicy: IfNotPresent
 
 vsts:
