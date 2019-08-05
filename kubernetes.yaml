@@ -68,7 +68,7 @@ spec:
     spec:
       serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.08
+      - image: divyanshm/k8s-poolprovider:v2.1
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
@@ -84,3 +84,36 @@ spec:
   backend:
     serviceName: k8s-poolprovider
     servicePort: 8082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-poolprovider-redis
+  labels:
+    app: k8s-poolprovider
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: k8s-poolprovider
+    tier: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-poolprovider-redis
+  labels:
+    app: k8s-poolprovider
+spec:
+  template:
+    metadata:
+      labels:
+        app: k8s-poolprovider
+        tier: redis
+    spec:
+      containers:
+      - image: redis:3-alpine
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: redis

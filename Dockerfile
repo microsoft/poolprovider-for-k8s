@@ -6,6 +6,7 @@ RUN apk add --no-cache git mercurial \
     && go get k8s.io/apimachinery/pkg/apis/meta/v1 \
     && go get k8s.io/client-go/rest \
     && go get k8s.io/api/core/v1 \
+    && go get github.com/gomodule/redigo/redis
     && apk del git mercurial
 
 RUN apk --no-cache add curl

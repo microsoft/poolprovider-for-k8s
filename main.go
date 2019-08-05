@@ -14,10 +14,17 @@ const (
 )
 
 func main() {
+	// Create Redis storage
+	storage := NewRedisStorage("k8s-poolprovider-redis:6379")
+
 	// Define HTTP endpoints
 	s := http.NewServeMux()
 	s.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { KubernetesCreateHandler(w, r) })
 	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
+
+	// Test redis
+	s.HandleFunc("/storageget", storageGetHandler(storage))
+	s.HandleFunc("/storageset", storageSetHandler(storage))
 
 	// Start HTTP Server with request logging
 	log.Fatal(http.ListenAndServe(":8082", s))
@@ -45,4 +52,33 @@ func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 
 	var pods = DeletePod(podname[0])
 	fmt.Fprintf(resp, "Response: %s", pods)
+}
+
+func storageGetHandler(s Storage) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		key := req.URL.Query()["key"]
+		res, err := s.Get(key[0])
+		if err != nil {
+			resp.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(resp, err.Error())
+			return
+		}
+		resp.WriteHeader(http.StatusOK)
+		fmt.Fprintln(resp, res)
+	}
+}
+
+func storageSetHandler(s Storage) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		key := req.URL.Query()["key"]
+		value := req.URL.Query()["value"]
+		err := s.Set(key[0], value[0])
+		if err != nil {
+			resp.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(resp, err.Error())
+			return
+		}
+		resp.WriteHeader(http.StatusOK)
+		fmt.Fprintln(resp, "Value set")
+	}
 }
