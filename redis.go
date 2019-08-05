@@ -59,6 +59,6 @@ func (r *RedisStorage) Set(key string, value string) error {
 	conn := r.connectionPool.Get()
 	defer conn.Close()
 
-	_, err := redis.String(conn.Do("SET", key, value))
+	_, err := conn.Do("SET", key, value)
 	return err
 }
