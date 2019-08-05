@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -23,8 +24,10 @@ func main() {
 	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
 
 	// Test redis
-	s.HandleFunc("/storageget", storageGetHandler(storage))
-	s.HandleFunc("/storageset", storageSetHandler(storage))
+	s.HandleFunc("/storageget", StorageGetHandler(storage))
+	s.HandleFunc("/storageset", StorageSetHandler(storage))
+	s.HandleFunc("/storageping", PingHandler(storage))
+	s.HandleFunc("/storagegetkeys", GetKeysHandler(storage))
 
 	// Start HTTP Server with request logging
 	log.Fatal(http.ListenAndServe(":8082", s))
@@ -54,7 +57,7 @@ func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Response: %s", pods)
 }
 
-func storageGetHandler(s Storage) http.HandlerFunc {
+func StorageGetHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		key := req.URL.Query()["key"]
 		res, err := s.Get(key[0])
@@ -68,7 +71,7 @@ func storageGetHandler(s Storage) http.HandlerFunc {
 	}
 }
 
-func storageSetHandler(s Storage) http.HandlerFunc {
+func StorageSetHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		key := req.URL.Query()["key"]
 		value := req.URL.Query()["value"]
@@ -80,5 +83,33 @@ func storageSetHandler(s Storage) http.HandlerFunc {
 		}
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, "Value set")
+	}
+}
+
+func PingHandler(s Storage) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		_, err := s.Ping()
+		if err != nil {
+			resp.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(resp, err.Error())
+			return
+		}
+		res := "pong"
+		resp.WriteHeader(http.StatusOK)
+		fmt.Fprintln(resp, res)
+	}
+}
+
+func GetKeysHandler(s Storage) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		res, err := s.GetKeys("*")
+		if err != nil {
+			resp.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(resp, err.Error())
+			return
+		}
+
+		resp.WriteHeader(http.StatusOK)
+		fmt.Fprintln(resp, strings.Join(res, ", "))
 	}
 }

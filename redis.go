@@ -10,6 +10,7 @@ type Storage interface {
 	Ping() (string, error)
 	Get(string) (string, error)
 	Set(string, string) error
+	GetKeys(string) ([]string, error)
 }
 
 type RedisStorage struct {
@@ -61,4 +62,29 @@ func (r *RedisStorage) Set(key string, value string) error {
 
 	_, err := conn.Do("SET", key, value)
 	return err
+}
+
+func (r *RedisStorage) GetKeys(pattern string) ([]string, error) {
+
+    conn := r.connectionPool.Get()
+    defer conn.Close()
+
+    iter := 0
+    keys := []string{}
+    for {
+        arr, err := redis.Values(conn.Do("SCAN", iter, "MATCH", pattern))
+        if err != nil {
+            return keys, err
+        }
+
+        iter, _ = redis.Int(arr[0], nil)
+        k, _ := redis.Strings(arr[1], nil)
+        keys = append(keys, k...)
+
+        if iter == 0 {
+            break
+        }
+    }
+
+    return keys, nil
 }
