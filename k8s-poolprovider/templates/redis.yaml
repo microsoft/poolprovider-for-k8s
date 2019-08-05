@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.redis.appname }}
+  labels:
+    app: {{ .Values.app.name }}
+spec:
+  ports:
+    - port: {{ .Values.redis.port }}
+  selector:
+    app: {{ .Values.app.name }}
+    tier: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Values.redis.appname }}
+  labels:
+    app: {{ .Values.app.name }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+        tier: redis
+    spec:
+      containers:
+      - image: {{ .Values.redis.image }}
+        name: redis
+        ports:
+        - containerPort: {{ .Values.redis.port }}
+          name: redis

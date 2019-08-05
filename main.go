@@ -24,10 +24,8 @@ func main() {
 	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
 
 	// Test redis
-	s.HandleFunc("/storageget", StorageGetHandler(storage))
-	s.HandleFunc("/storageset", StorageSetHandler(storage))
-	s.HandleFunc("/storageping", PingHandler(storage))
-	s.HandleFunc("/storagegetkeys", GetKeysHandler(storage))
+	s.HandleFunc("/testredisdata", StorageSetHandler(storage))
+	s.HandleFunc("/redisgetkeys", GetKeysHandler(storage))
 
 	// Start HTTP Server with request logging
 	log.Fatal(http.ListenAndServe(":8082", s))
@@ -57,37 +55,15 @@ func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Response: %s", pods)
 }
 
-func StorageGetHandler(s Storage) http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		key := req.URL.Query()["key"]
-		res, err := s.Get(key[0])
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(resp, err.Error())
-			return
-		}
-		resp.WriteHeader(http.StatusOK)
-		fmt.Fprintln(resp, res)
-	}
-}
-
 func StorageSetHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		key := "some sample key"
 		value := "some sample value"
 
+		// Retrieving information from backing Redis storage
 		s.Set(key, value)
 		retrievedValue, _ := s.Get(key)
 		fmt.Fprintf(resp, "All good. Retrieved %s", retrievedValue)
-	}
-}
-
-func PingHandler(s Storage) http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		res := s.Init()
-
-		resp.WriteHeader(http.StatusOK)
-		fmt.Fprintln(resp, res)
 	}
 }
 

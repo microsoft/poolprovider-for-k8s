@@ -14,7 +14,7 @@ rbac:
 
 image:
   repository: divyanshm/k8s-poolprovider
-  tag: v2.15
+  tag: v2.16
   pullPolicy: IfNotPresent
 
 vsts:
@@ -24,6 +24,11 @@ vsts:
 
 config:
   buildkitPodCount: 1
+
+redis:
+  appname: k8s-poolprovider-redis
+  port: 6379
+  image: redis:3-alpine
 
   tls: []
   #  - secretName: chart-example-tls

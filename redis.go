@@ -2,7 +2,6 @@ package main
 
 import (
 	"time"
-	"fmt"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -12,7 +11,6 @@ type Storage interface {
 	Get(string) (string, error)
 	Set(string, string) error
 	GetKeys(string) ([]string, error)
-	Init() string
 }
 
 type RedisStorage struct {
@@ -39,30 +37,12 @@ func NewRedisStorage(server string) Storage {
 	}
 }
 
-// Ping will "ping" the storage backend.
-// The function can use to check the connection from
-// the app to the storage backend.
 func (r *RedisStorage) Ping() (string, error) {
 	conn := r.connectionPool.Get()
 	defer conn.Close()
 
 	res, err := redis.String(conn.Do("PING"))
 	return res, err
-}
-
-func (r *RedisStorage) Init() string {
-	conn := r.connectionPool.Get()
-	defer conn.Close()
-
-    conn.Do("SET", "best_car_ever", "Tesla Model S")
-	conn.Do("SET", "worst_car_ever", "Geo Metro")
-	
-	worst_car_ever, err := redis.String(conn.Do("GET", "worst_car_ever"))
-    if err != nil {
-      fmt.Println("worst_car_ever not found", err)
-	}
-	
-	return worst_car_ever
 }
 
 func (r *RedisStorage) Get(key string) (string, error) {
