@@ -61,6 +61,7 @@ func (r *RedisStorage) Init() string {
     if err != nil {
       fmt.Println("worst_car_ever not found", err)
 	}
+	
 	return worst_car_ever
 }
 

@@ -73,25 +73,12 @@ func StorageGetHandler(s Storage) http.HandlerFunc {
 
 func StorageSetHandler(s Storage) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		key := req.URL.Query()["key"]
-		value := req.URL.Query()["value"]
-		fmt.Fprintf(resp, "key is %s, value is %s", key[0], value[0]);
-		if key == nil || key[0] == "" {
-			key[0] = "fu"
-		}
+		key := "some sample key"
+		value := "some sample value"
 
-		if value == nil || value[0] == "" {
-			value[0] = "bar"
-		}
-
-		err := s.Set(key[0], value[0])
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(resp, "Error" + err.Error())
-			return
-		}
-		resp.WriteHeader(http.StatusOK)
-		fmt.Fprintf(resp, "Value set")
+		s.Set(key, value)
+		retrievedValue, _ := s.Get(key)
+		fmt.Fprintf(resp, "All good. Retrieved %s", retrievedValue)
 	}
 }
 
