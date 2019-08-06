@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  labels:
-    app: {{ .Values.app.name }}
   name: buildkitd
   namespace: {{ .Values.app.namespace }}
+  labels:
+    app: {{ .Values.app.name }}
 spec:
   serviceName: buildkitd
   replicas: {{ .Values.config.buildkitPodCount }}
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: buildkitd
-        image: moby/buildkit:master-rootless
+        image: {{ .Values.config.buildkitImage }}
         args:
         - --addr
         - unix:///run/user/1000/buildkit/buildkitd.sock
@@ -35,11 +35,11 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata:
-  labels:
-    app: {{ .Values.app.name }}
+metadata:  
   name: buildkitd
   namespace: {{ .Values.app.namespace }}
+  labels:
+    app: {{ .Values.app.name }}
 spec:
   ports:
   - port: 1234

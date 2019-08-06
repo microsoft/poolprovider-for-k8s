@@ -1,29 +1,11 @@
+# Need to create the opaque secret vsts once in namespace azuredevops before running this app.
+# kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<PAT TOKEN> --from-literal=VSTS_ACCOUNT=<Account name>  --from-literal=VSTS_POOL=<Pool name> -n azuredevops
 apiVersion: v1
 kind: Namespace
 metadata:
   name: azuredevops
   labels:
     app: k8s-poolprovider
----
-apiVersion: v1
-kind: ServiceAccount
-metadata: 
-  name: pipelineprovider
-  namespace: default
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: RoleBinding
-metadata:
-  name: pipelineprovider-binding
-  namespace: azuredevops
-subjects:
-  - kind: ServiceAccount
-    name: pipelineprovider
-    namespace: default
-roleRef:
-  kind: ClusterRole
-  name: admin
-  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -43,6 +25,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8s-poolprovider
+  namespace: azuredevops
   labels:
     app: k8s-poolprovider
 spec:
@@ -57,6 +40,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: k8s-poolprovider
+  namespace: azuredevops
   labels:
     app: k8s-poolprovider
 spec:
@@ -66,9 +50,8 @@ spec:
         app: k8s-poolprovider
         tier: frontend
     spec:
-      serviceAccountName: pipelineprovider
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.16
+      - image: divyanshm/k8s-poolprovider:v2.15
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
@@ -77,9 +60,10 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+  name: k8s-poolprovider
+  namespace: azuredevops
   labels:
     app: k8s-poolprovider
-  name: k8s-poolprovider
 spec:
   backend:
     serviceName: k8s-poolprovider
@@ -89,6 +73,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8s-poolprovider-redis
+  namespace: azuredevops
   labels:
     app: k8s-poolprovider
 spec:
@@ -102,6 +87,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: k8s-poolprovider-redis
+  namespace: azuredevops
   labels:
     app: k8s-poolprovider
 spec:

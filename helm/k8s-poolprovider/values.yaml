@@ -24,6 +24,7 @@ vsts:
 
 config:
   buildkitPodCount: 1
+  buildkitImage: moby/buildkit:master-rootless
 
 redis:
   appname: k8s-poolprovider-redis
