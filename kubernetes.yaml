@@ -51,7 +51,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.15
+      - image: divyanshm/k8s-poolprovider:v2.16
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
