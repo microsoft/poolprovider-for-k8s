@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ .Values.app.name }}
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 8082
   selector:
