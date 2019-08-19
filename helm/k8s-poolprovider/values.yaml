@@ -21,6 +21,7 @@ vsts:
   VSTS_TOKEN: ""
   VSTS_ACCOUNT: ""
   VSTS_POOL: default 
+  VSTS_SECRET: ""
 
 config:
   buildkitPodCount: 1
