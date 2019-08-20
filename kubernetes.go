@@ -11,16 +11,16 @@ import (
 )
 
 type PodResponse struct {
-    status string
-    message  string
+    Status string
+    Message  string
 }
 
 func CreatePod(podname string) PodResponse {
 	cs, err := getInClusterClientSet()
 	var response PodResponse
 	if err != nil {
-		response.status = "failure"
-		response.message = err.Error()
+		response.Status = "failure"
+		response.Message = err.Error()
 		return response
 	}
 
@@ -28,21 +28,21 @@ func CreatePod(podname string) PodResponse {
 	var p1 v1.Pod
 	err1 := yaml.Unmarshal([]byte(podYaml), &p1)
 	if err1 != nil {
-		response.status = "failure"
-		response.message = "unmarshal error: " + err1.Error()
+		response.Status = "failure"
+		response.Message = "unmarshal error: " + err1.Error()
 		return response
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 	pod, err2 := podClient.Create(&p1)
 	if err2 != nil {
-		response.status = "failure"
-		response.message = "podclient create error: " + err2.Error()
+		response.Status = "failure"
+		response.Message = "podclient create error: " + err2.Error()
 		return response
 	}
 
-	response.status = "success"
-	response.message = "Pod created: " + pod.GetName()
+	response.Status = "success"
+	response.Message = "Pod created: " + pod.GetName()
 	return response
 }
 
@@ -50,7 +50,7 @@ func DeletePod(podname string) PodResponse {
 	cs, err := getInClusterClientSet()
 	response := PodResponse {  "failure", "" }
 	if err != nil {
-		response.message = err.Error()
+		response.Message = err.Error()
 		return response
 	}
 
@@ -58,12 +58,12 @@ func DeletePod(podname string) PodResponse {
 
 	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
 	if err2 != nil {
-		response.message = "podclient delete error: " + err2.Error()
+		response.Message = "podclient delete error: " + err2.Error()
 		return response
 	}
 
-	response.status = "success"
-	response.message = "Deleted " + podname
+	response.Status = "success"
+	response.Message = "Deleted " + podname
 	return response
 }
 

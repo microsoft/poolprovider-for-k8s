@@ -42,11 +42,7 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	var pods = CreatePod(agentSpec)
-
-	jsonData, _ := json.Marshal(pods)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.WriteHeader(http.StatusCreated)
-    resp.Write(jsonData)
+	WriteJsonResponse(resp, pods)
 }
 
 func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
@@ -57,11 +53,7 @@ func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	var pods = DeletePod(podname[0])
-	
-	jsonData, _ := json.Marshal(pods)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.WriteHeader(http.StatusCreated)
-    resp.Write(jsonData)
+	WriteJsonResponse(resp, pods)
 }
 
 func StorageSetHandler(s Storage) http.HandlerFunc {
@@ -88,4 +80,11 @@ func GetKeysHandler(s Storage) http.HandlerFunc {
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, strings.Join(res, ", "))
 	}
+}
+
+func WriteJsonResponse(resp http.ResponseWriter, podResponse PodResponse) {
+	jsonData, _ := json.Marshal(podResponse)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.WriteHeader(http.StatusCreated)
+    resp.Write(jsonData)
 }
