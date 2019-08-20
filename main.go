@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,7 +42,11 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	var pods = CreatePod(agentSpec)
-	fmt.Fprintf(resp, "Pods: %s", pods)
+
+	jsonData, _ := json.Marshal(pods)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.WriteHeader(http.StatusCreated)
+    resp.Write(jsonData)
 }
 
 func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
@@ -52,7 +57,11 @@ func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	var pods = DeletePod(podname[0])
-	fmt.Fprintf(resp, "Response: %s", pods)
+	
+	jsonData, _ := json.Marshal(pods)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.WriteHeader(http.StatusCreated)
+    resp.Write(jsonData)
 }
 
 func StorageSetHandler(s Storage) http.HandlerFunc {

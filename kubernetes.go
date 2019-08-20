@@ -10,42 +10,61 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func CreatePod(podname string) string {
+type PodResponse struct {
+    status string
+    message  string
+}
+
+func CreatePod(podname string) PodResponse {
 	cs, err := getInClusterClientSet()
+	var response PodResponse
 	if err != nil {
-		return err.Error()
+		response.status = "failure"
+		response.message = err.Error()
+		return response
 	}
 
 	var podYaml = getAgentSpecification(podname)
 	var p1 v1.Pod
 	err1 := yaml.Unmarshal([]byte(podYaml), &p1)
 	if err1 != nil {
-		return "unmarshal error: " + err1.Error()
+		response.status = "failure"
+		response.message = "unmarshal error: " + err1.Error()
+		return response
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 	pod, err2 := podClient.Create(&p1)
 	if err2 != nil {
-		return "podclient create error: " + err2.Error()
+		response.status = "failure"
+		response.message = "podclient create error: " + err2.Error()
+		return response
 	}
 
-	return pod.GetName()
+	response.status = "success"
+	response.message = "Pod created: " + pod.GetName()
+	return response
 }
 
-func DeletePod(podname string) string {
+func DeletePod(podname string) PodResponse {
 	cs, err := getInClusterClientSet()
+	response := PodResponse {  "failure", "" }
 	if err != nil {
-		return err.Error()
+		response.message = err.Error()
+		return response
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 
 	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
 	if err2 != nil {
-		return "podclient delete error: " + err2.Error()
+		response.message = "podclient delete error: " + err2.Error()
+		return response
 	}
 
-	return "Deleted " + podname
+	response.status = "success"
+	response.message = "Deleted " + podname
+	return response
 }
 
 func getInClusterClientSet() (*kubernetes.Clientset, error) {
