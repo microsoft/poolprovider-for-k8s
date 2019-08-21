@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -23,6 +24,8 @@ func main() {
 	s := http.NewServeMux()
 	s.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { KubernetesCreateHandler(w, r) })
 	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
+	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
+	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 
 	// Test redis
 	s.HandleFunc("/testredisdata", StorageSetHandler(storage))
@@ -43,6 +46,19 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 
 	var pods = CreatePod(agentSpec)
 	WriteJsonResponse(resp, pods)
+}
+
+func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
+	if(req.Method == "POST") {
+		var agentRequest AgentRequest
+		requestBody, _ := ioutil.ReadAll(req.Body)
+		json.Unmarshal(requestBody, &agentRequest)
+
+		var pods = CreatePod("")
+	    WriteJsonResponse(resp, pods)
+	} else {
+		http.Error(resp, "Invalid request Method.", http.StatusMethodNotAllowed)
+	}
 }
 
 func KubernetesDeleteHandler(resp http.ResponseWriter, req *http.Request) {
@@ -80,6 +96,11 @@ func GetKeysHandler(s Storage) http.HandlerFunc {
 		resp.WriteHeader(http.StatusOK)
 		fmt.Fprintln(resp, strings.Join(res, ", "))
 	}
+}
+
+func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
+	var emptyResponse PodResponse
+	WriteJsonResponse(resp, emptyResponse)
 }
 
 func WriteJsonResponse(resp http.ResponseWriter, podResponse PodResponse) {
