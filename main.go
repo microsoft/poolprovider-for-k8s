@@ -26,6 +26,7 @@ func main() {
 	s.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) { KubernetesDeleteHandler(w, r) })
 	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
+	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
 
 	// Test redis
 	s.HandleFunc("/testredisdata", StorageSetHandler(storage))
@@ -44,7 +45,9 @@ func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 		agentSpec = userSpec[0]
 	}
 
-	var pods = CreatePod(agentSpec)
+	// Create a new pod without an AgentId label
+	var pods = CreatePod(agentSpec, "")
+
 	WriteJsonResponse(resp, pods)
 }
 
@@ -54,8 +57,29 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 		requestBody, _ := ioutil.ReadAll(req.Body)
 		json.Unmarshal(requestBody, &agentRequest)
 
-		var pods = CreatePod("")
-	    WriteJsonResponse(resp, pods)
+		if(agentRequest.AgentId == "") {
+			http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
+		}
+
+		var pods = CreatePod("", "")
+		WriteJsonResponse(resp, pods)
+	} else {
+		http.Error(resp, "Invalid request Method.", http.StatusMethodNotAllowed)
+	}
+}
+
+func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
+	if(req.Method == "POST") {
+		var agentRequest ReleaseAgentRequest
+		requestBody, _ := ioutil.ReadAll(req.Body)
+		json.Unmarshal(requestBody, &agentRequest)
+
+		if(agentRequest.AgentId == "") {
+			http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
+		}
+
+		var pods = DeletePod(agentRequest.AgentId)
+		WriteJsonResponse(resp, pods)
 	} else {
 		http.Error(resp, "Invalid request Method.", http.StatusMethodNotAllowed)
 	}
