@@ -38,15 +38,20 @@ func main() {
 
 func KubernetesCreateHandler(resp http.ResponseWriter, req *http.Request) {
 	userSpec := req.URL.Query()["agentspec"]
+	label := req.URL.Query()["label"]
+	labelSpec := ""
 
 	// using the default agent spec
 	agentSpec := "agent-dind"
 	if userSpec != nil {
 		agentSpec = userSpec[0]
 	}
+	if label != nil {
+		labelSpec = label[0]
+	}
 
-	// Create a new pod without an AgentId label
-	var pods = CreatePod(agentSpec, "")
+	// Create a new pod. Pass a label down if present.
+	var pods = CreatePod(agentSpec, labelSpec)
 
 	WriteJsonResponse(resp, pods)
 }
