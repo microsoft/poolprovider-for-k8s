@@ -3,15 +3,15 @@ package main
 import (
 	"io/ioutil"
 	"github.com/ghodss/yaml"
-	
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
+const agentIdLabel = "AgentId"
+
 func CreatePod(podname, agentId string) PodResponse {
-	cs, err := getInClusterClientSet()
+	cs, err := GetClientSet()
 	var response PodResponse
 	if err != nil {
 		response.Status = "failure"
@@ -30,7 +30,9 @@ func CreatePod(podname, agentId string) PodResponse {
 
 	// Set the agentId as label if specified
 	if(agentId != "") {
-		p1.Labels["AgentId"] = agentId
+		p1.SetLabels(map[string]string{
+			agentIdLabel: agentId,
+		  })
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
@@ -47,7 +49,7 @@ func CreatePod(podname, agentId string) PodResponse {
 }
 
 func DeletePod(podname string) PodResponse {
-	cs, err := getInClusterClientSet()
+	cs, err := GetClientSet()
 	response := PodResponse { "failure", "" }
 	if err != nil {
 		response.Message = err.Error()
@@ -68,7 +70,7 @@ func DeletePod(podname string) PodResponse {
 }
 
 func DeletePodWithAgentId(agentId string) PodResponse {
-	cs, err := getInClusterClientSet()
+	cs, err := GetClientSet()
 	response := PodResponse { "failure", "" }
 	if err != nil {
 		response.Message = err.Error()
@@ -78,7 +80,7 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	podClient := cs.CoreV1().Pods("azuredevops")
 
 	// Get the pod with this agentId
-	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentId})
+	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if(pods == nil || len(pods.Items) == 0) {
 		response.Message = "Could not find running pod with AgentId" + agentId
 		return response
@@ -93,20 +95,6 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	response.Status = "success"
 	response.Message = "Deleted " + pods.Items[0].GetName()
 	return response
-}
-
-func getInClusterClientSet() (*kubernetes.Clientset, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientset, nil
 }
 
 func getAgentSpecification(podname string) string {
