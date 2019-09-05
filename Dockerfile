@@ -9,8 +9,6 @@ RUN apk add --no-cache git mercurial \
     && go get github.com/gomodule/redigo/redis \
     && apk del git mercurial
 
-RUN apk --no-cache add curl
-
 RUN mkdir /app
 ADD . /app/
 WORKDIR /app

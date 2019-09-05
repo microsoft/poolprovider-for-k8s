@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"k8s-poolprovider/k8s"
 )
 
 func main() {
@@ -39,7 +37,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 			http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
 		}
 
-		var pods = k8s.CreatePod(agentRequest.AgentId)
+		var pods = CreatePod(agentRequest.AgentId)
 		WriteJsonResponse(resp, pods)
 	} else {
 		http.Error(resp, "Invalid request Method.", http.StatusMethodNotAllowed)
@@ -56,7 +54,7 @@ func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 			http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
 		}
 
-		var pods = k8s.DeletePodWithAgentId(agentRequest.AgentId)
+		var pods = DeletePodWithAgentId(agentRequest.AgentId)
 
 		WriteJsonResponse(resp, pods)
 	} else {
@@ -91,11 +89,11 @@ func GetKeysHandler(s Storage) http.HandlerFunc {
 }
 
 func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
-	var emptyResponse k8s.PodResponse
+	var emptyResponse PodResponse
 	WriteJsonResponse(resp, emptyResponse)
 }
 
-func WriteJsonResponse(resp http.ResponseWriter, podResponse k8s.PodResponse) {
+func WriteJsonResponse(resp http.ResponseWriter, podResponse PodResponse) {
 	jsonData, _ := json.Marshal(podResponse)
 	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(http.StatusCreated)
