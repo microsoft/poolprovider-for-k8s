@@ -1,10 +1,5 @@
 package main
 
-type PodResponse struct {
-    Status string
-    Message  string
-}
-
 type AgentConfigurationData struct {
 	AgentSettings string
 	AgentCredentials string

@@ -1,4 +1,4 @@
-package main 
+package k8s 
 
 import (
 	"path/filepath"
@@ -9,6 +9,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// Gets the application client set. This can be used to initialize the various Kubernetes clients.
+// Uses in cliuster configuration when app is running inside the cluster, or kubeconfig file from
+// home directory when running in development mode.
 func GetClientSet() (*kubernetes.Clientset, error) {
 	debugMode := os.Getenv("DEBUG_LOCAL")
 	if debugMode != "" {
@@ -53,5 +56,7 @@ func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
 	}
-	return os.Getenv("USERPROFILE") // windows
+
+	// Windows
+	return os.Getenv("USERPROFILE")
 }
