@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func ComputeHash(message string) [] byte {
+func ComputeHash(message string) string {
 	hashAlgorithm := GetHashAlgorithm()
 	if(hashAlgorithm == nil) {
 		return nil;
