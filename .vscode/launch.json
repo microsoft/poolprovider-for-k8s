@@ -11,7 +11,8 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "env": {
-                "DEBUG_LOCAL": "Development"
+                "DEBUG_LOCAL": "Development",
+                "VSTS_SECRET": "test"
             },
             "args": []
         }

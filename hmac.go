@@ -6,6 +6,8 @@ import (
 
 	"crypto/sha512"
 	"crypto/hmac"
+	"encoding/hex"
+	"log"
 )
 
 func ComputeHash(message string) [] byte {
@@ -28,8 +30,11 @@ func ValidateHash(message, inputHmac string) bool {
 
 	hashAlgorithm.Write([]byte(message))
 	expectedMAC := hashAlgorithm.Sum(nil)
-	
-	return hmac.Equal([]byte(inputHmac), expectedMAC)
+	inputHMacArr, err := hex.DecodeString(inputHmac)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return hmac.Equal(inputHMacArr, expectedMAC)
 }
 
 func GetHashAlgorithm() hash.Hash {

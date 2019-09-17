@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -37,7 +38,13 @@ func main() {
 	}
 
 	// Start HTTP Server with request logging
-	log.Fatal(srv.ListenAndServeTLS("/secure/tls.crt", "/secure/tlskey.key"))
+	debugMode := os.Getenv("DEBUG_LOCAL")
+	if debugMode != "" {
+		log.Fatal(srv.ListenAndServeTLS("tls.crt", "tls.key"))
+	} else {
+		log.Fatal(srv.ListenAndServeTLS("/secure/tls.crt", "/secure/tlskey.key"))
+		
+	}
 }
 
 func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
