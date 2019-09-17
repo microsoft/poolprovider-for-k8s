@@ -13,7 +13,7 @@ import (
 func ComputeHash(message string) string {
 	hashAlgorithm := GetHashAlgorithm()
 	if(hashAlgorithm == nil) {
-		return nil;
+		return "";
 	}
 
 	hashAlgorithm.Write([]byte(message))
