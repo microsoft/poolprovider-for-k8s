@@ -17,7 +17,7 @@ func ComputeHash(message string) [] byte {
 	}
 
 	hashAlgorithm.Write([]byte(message))
-	hashedMessage := hashAlgorithm.Sum(nil)
+	hashedMessage := hex.EncodeToString(hashAlgorithm.Sum(nil))
 
 	return hashedMessage
 }
