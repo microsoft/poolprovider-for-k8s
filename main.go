@@ -23,19 +23,19 @@ func main() {
 
 func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	// HTTP method should be POST and the HMAC header should be valid
-	if (req.Method == "POST") {
-		if (isRequestHmacValid(req)) {
-		    var agentRequest AgentRequest
-		    requestBody, _ := ioutil.ReadAll(req.Body)
-		    json.Unmarshal(requestBody, &agentRequest)
+	if req.Method == "POST" {
+		if isRequestHmacValid(req) {
+			var agentRequest AgentRequest
+			requestBody, _ := ioutil.ReadAll(req.Body)
+			json.Unmarshal(requestBody, &agentRequest)
 
-		    if(agentRequest.AgentId == "") {
-			    http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
-		    }
+			if agentRequest.AgentId == "" {
+				http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
+			}
 
-		    var pods = CreatePod(agentRequest.AgentId)
-		    writeJsonResponse(resp, pods)
-	    } else{
+			var pods = CreatePod(agentRequest.AgentId)
+			writeJsonResponse(resp, pods)
+		} else {
 			http.Error(resp, "Endpoint can only be invoked with AzureDevOps with the correct Shared Signature.", http.StatusForbidden)
 		}
 	} else {
@@ -45,21 +45,21 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 
 func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	// HTTP method should be POST and the HMAC header should be valid
-	if (req.Method == "POST") {
-		if (isRequestHmacValid(req)) {
+	if req.Method == "POST" {
+		if isRequestHmacValid(req) {
 			var agentRequest ReleaseAgentRequest
-		    requestBody, _ := ioutil.ReadAll(req.Body)
-		    json.Unmarshal(requestBody, &agentRequest)
+			requestBody, _ := ioutil.ReadAll(req.Body)
+			json.Unmarshal(requestBody, &agentRequest)
 
-		    if(agentRequest.AgentId == "") {
-			    http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
-		    }
+			if agentRequest.AgentId == "" {
+				http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
+			}
 
-		    var pods = DeletePodWithAgentId(agentRequest.AgentId)
-		    writeJsonResponse(resp, pods)
+			var pods = DeletePodWithAgentId(agentRequest.AgentId)
+			writeJsonResponse(resp, pods)
 		} else {
 			http.Error(resp, "Endpoint can only be invoked with AzureDevOps with the correct Shared Signature.", http.StatusForbidden)
-		}	
+		}
 	} else {
 		http.Error(resp, "Invalid request Method.", http.StatusMethodNotAllowed)
 	}
@@ -70,20 +70,20 @@ func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
 	writeJsonResponse(resp, emptyResponse)
 }
 
-func writeJsonResponse(resp http.ResponseWriter, podResponse PodResponse) {
+func writeJsonResponse(resp http.ResponseWriter, podResponse interface{}) {
 	jsonData, _ := json.Marshal(podResponse)
 	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(http.StatusCreated)
-    resp.Write(jsonData)
+	resp.Write(jsonData)
 }
 
 func isRequestHmacValid(req *http.Request) bool {
 	azureDevOpsHeader := "X-Azure-Signature"
 	headerVal := req.Header.Get(azureDevOpsHeader)
 	requestBody, _ := ioutil.ReadAll(req.Body)
-	
+
 	// No header is specified
-	if (headerVal == "") {
+	if headerVal == "" {
 		return false
 	}
 

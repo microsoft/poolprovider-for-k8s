@@ -3,24 +3,25 @@ package main
 import (
 	"errors"
 	"io/ioutil"
+
 	"github.com/ghodss/yaml"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/api/core/v1"
 )
 
 // External callers calling into Kubernetes APIs via this package will get a PodResponse
 type PodResponse struct {
-    Status string
-    Message  string
+	Status  string
+	Message string
 }
 
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
-func CreatePod(agentId string) PodResponse {
+func CreatePod(agentId string) AgentProvisionResponse {
 	cs, err := GetClientSet()
-	var response PodResponse
+	var response AgentProvisionResponse
 	if err != nil {
 		return getFailureResponse(response, err)
 	}
@@ -33,26 +34,25 @@ func CreatePod(agentId string) PodResponse {
 	}
 
 	// Set the agentId as label if specified
-	if(agentId != "") {
+	if agentId != "" {
 		p1.SetLabels(map[string]string{
 			agentIdLabel: agentId,
-		  })
+		})
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
-	pod, err2 := podClient.Create(&p1)
+	_, err2 := podClient.Create(&p1)
 	if err2 != nil {
 		return getFailureResponse(response, err)
 	}
 
-	response.Status = "success"
-	response.Message = "Pod created: " + pod.GetName()
+	response.ResponseType = "Success"
 	return response
 }
 
 func DeletePod(podname string) PodResponse {
 	cs, err := GetClientSet()
-	response := PodResponse { "failure", "" }
+	response := PodResponse{"failure", ""}
 	if err != nil {
 		response.Message = err.Error()
 		return response
@@ -75,20 +75,20 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	cs, err := GetClientSet()
 	var response PodResponse
 	if err != nil {
-		return getFailureResponse(response, err)
+		return getFailure(response, err)
 	}
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 
 	// Get the pod with this agentId
 	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
-	if(pods == nil || len(pods.Items) == 0) {
-		return getFailureResponse(response, errors.New("Could not find running pod with AgentId" + agentId))
+	if pods == nil || len(pods.Items) == 0 {
+		return getFailure(response, errors.New("Could not find running pod with AgentId"+agentId))
 	}
 
 	err1 := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
 	if err1 != nil {
-		return getFailureResponse(response, err1)
+		return getFailure(response, err1)
 	}
 
 	response.Status = "success"
@@ -113,8 +113,14 @@ func getAgentSpecification() string {
 	return podYaml
 }
 
-func getFailureResponse(response PodResponse, err error) PodResponse {
-	response.Status = "failure"
+func getFailure(response PodResponse, err error) PodResponse {
+	response.Status = "fail"
 	response.Message = err.Error()
+	return response
+}
+
+func getFailureResponse(response AgentProvisionResponse, err error) AgentProvisionResponse {
+	response.ResponseType = "fail"
+	response.ErrorMessage = err.Error()
 	return response
 }
