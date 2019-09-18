@@ -2,9 +2,18 @@ package main
 
 type AgentConfigurationData struct {
 	AgentSettings     string
-	AgentCredentials  string
+	AgentCredentials  AgentCredentials
 	AgentVersion      string
 	AgentDownloadUrls string
+}
+
+type AgentCredentials struct {
+	Scheme string
+	Data   AgentCredentialData
+}
+
+type AgentCredentialData struct {
+	Token string
 }
 
 type AgentRequest struct {

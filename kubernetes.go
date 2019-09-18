@@ -19,7 +19,7 @@ type PodResponse struct {
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
-func CreatePod(agentId string) AgentProvisionResponse {
+func CreatePod(agentId string, token string) AgentProvisionResponse {
 	cs, err := GetClientSet()
 	var response AgentProvisionResponse
 	if err != nil {
@@ -39,6 +39,9 @@ func CreatePod(agentId string) AgentProvisionResponse {
 			agentIdLabel: agentId,
 		})
 	}
+
+	// add the vsts token param
+	p1.Spec.Containers[0].Env = append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_SECRET", Value: token})
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 	_, err2 := podClient.Create(&p1)

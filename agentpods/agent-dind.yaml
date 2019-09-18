@@ -12,11 +12,6 @@ spec:
         secretKeyRef:
           name: vsts
           key: VSTS_ACCOUNT
-    - name: VSTS_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: vsts
-          key: VSTS_TOKEN
     - name: VSTS_POOL
       valueFrom:
         secretKeyRef:
