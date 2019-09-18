@@ -41,7 +41,7 @@ func CreatePod(agentId string, token string) AgentProvisionResponse {
 	}
 
 	// add the vsts token param
-	p1.Spec.Containers[0].Env = append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_SECRET", Value: token})
+	p1.Spec.Containers[0].Env = append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_TOKEN", Value: token})
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 	_, err2 := podClient.Create(&p1)
