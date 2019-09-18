@@ -39,7 +39,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 				http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
 			}
 
-			var pods = CreatePod(agentRequest.AgentId, agentRequest.AgentConfiguration.AgentCredentials.Data.Token)
+			var pods = CreatePod(agentRequest.AgentId, agentRequest.AuthenticationToken)
 			writeJsonResponse(resp, pods)
 		} else {
 			http.Error(resp, "Endpoint can only be invoked with AzureDevOps with the correct Shared Signature.", http.StatusForbidden)

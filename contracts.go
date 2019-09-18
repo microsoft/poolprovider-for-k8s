@@ -20,6 +20,7 @@ type AgentRequest struct {
 	AgentId                 string
 	AgentPool               string
 	AccountId               string
+	AuthenticationToken     string
 	FailRequestUrl          string
 	AppendRequestMessageUrl string
 	IsScheduled             bool
