@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -26,8 +27,13 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
 		if isRequestHmacValid(req) {
 			var agentRequest AgentRequest
-			requestBody, _ := ioutil.ReadAll(req.Body)
+			requestBody, err := ioutil.ReadAll(req.Body)
+
 			json.Unmarshal(requestBody, &agentRequest)
+
+			if err != nil {
+				http.Error(resp, err.Error(), http.StatusCreated)
+			}
 
 			if agentRequest.AgentId == "" {
 				http.Error(resp, "No AgentId sent in request body.", http.StatusCreated)
@@ -81,6 +87,9 @@ func isRequestHmacValid(req *http.Request) bool {
 	azureDevOpsHeader := "X-Azure-Signature"
 	headerVal := req.Header.Get(azureDevOpsHeader)
 	requestBody, _ := ioutil.ReadAll(req.Body)
+
+	// Set the body again
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
 	// No header is specified
 	if headerVal == "" {
