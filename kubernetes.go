@@ -46,6 +46,7 @@ func CreatePod(agentId string) AgentProvisionResponse {
 		return getFailureResponse(response, err)
 	}
 
+	response.Accepted = true
 	response.ResponseType = "Success"
 	return response
 }
