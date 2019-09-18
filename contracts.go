@@ -20,7 +20,6 @@ type AgentRequest struct {
 }
 
 type AgentProvisionResponse struct {
-	AgentData    string
 	ResponseType string
 	ErrorMessage string
 }
