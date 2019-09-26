@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 
@@ -8,6 +9,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // External callers calling into Kubernetes APIs via this package will get a PodResponse
@@ -19,32 +21,27 @@ type PodResponse struct {
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
-func CreatePod(agentId string, token string) AgentProvisionResponse {
+func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	cs, err := GetClientSet()
+
 	var response AgentProvisionResponse
 	if err != nil {
 		return getFailureResponse(response, err)
 	}
 
-	var podYaml = getAgentSpecification()
-	var p1 v1.Pod
-	err1 := yaml.Unmarshal([]byte(podYaml), &p1)
-	if err1 != nil {
+	secret := createSecret(cs, agentRequest)
+	pod, err := getAgentSpecification(agentRequest.AgentId)
+	if err != nil {
 		return getFailureResponse(response, err)
 	}
 
-	// Set the agentId as label if specified
-	if agentId != "" {
-		p1.SetLabels(map[string]string{
-			agentIdLabel: agentId,
-		})
-	}
+	// Mount the secrets as a volume
+	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(secret.Name))
 
-	// add the vsts token param
-	p1.Spec.Containers[0].Env = append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_TOKEN", Value: token})
+	//append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_TOKEN", Value: token})
 
 	podClient := cs.CoreV1().Pods("azuredevops")
-	_, err2 := podClient.Create(&p1)
+	_, err2 := podClient.Create(pod)
 	if err2 != nil {
 		return getFailureResponse(response, err)
 	}
@@ -100,21 +97,64 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	return response
 }
 
-func getAgentSpecification() string {
+func getAgentSpecification(agentId string) (*v1.Pod, error) {
 	// Defaulting to use the DIND image, the podname can be exposed as a parameter and the user can then select which
 	// image will be used to create the agent.
-	podname := "agent-dind"
+	podname := "agent-lean-dind"
 
 	// If pod is to be created in a different namespace
 	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
 	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=<accountname>
-	dat, err := ioutil.ReadFile("agentpods/" + podname + ".yaml")
-	if err != nil {
-		return err.Error()
+	dat, _ := ioutil.ReadFile("agentpods/" + podname + ".yaml")
+
+	var p1 v1.Pod
+	var podYaml = string(dat)
+	_ = yaml.Unmarshal([]byte(podYaml), &p1)
+
+	if agentId != "" {
+		// Set the agentId as label if specified
+		p1.SetLabels(map[string]string{
+			agentIdLabel: agentId,
+		})
 	}
 
-	var podYaml = string(dat)
-	return podYaml
+	return &p1, nil
+}
+
+func getAgentSecret() *v1.Secret {
+	var secret v1.Secret
+
+	dat, _ := ioutil.ReadFile("agentpods/agent-secret.yaml")
+	var secretYaml = string(dat)
+	yaml.Unmarshal([]byte(secretYaml), &secret)
+
+	return &secret
+}
+
+func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
+	secret := getAgentSecret()
+	agentSettings, _ := json.Marshal(request.AgentConfiguration.AgentSettings)
+	agentCredentials, _ := json.Marshal(request.AgentConfiguration.AgentCredentials)
+
+	secret.Data[".agent"] = ([]byte(string(agentSettings)))
+	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
+	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
+
+	secretClient := cs.CoreV1().Secrets("azuredevops")
+	secret2, err := secretClient.Create(secret)
+
+	if err != nil {
+		secret2.Name = "newname"
+	}
+
+	return secret2
+}
+
+func getSecretVolume(secretName string) *v1.Volume {
+	return &v1.Volume{
+		Name:         "agent-creds",
+		VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: secretName}},
+	}
 }
 
 func getFailure(response PodResponse, err error) PodResponse {

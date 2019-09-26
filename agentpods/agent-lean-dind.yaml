@@ -23,6 +23,3 @@ spec:
   volumes:
   - name: agent-pv-storage
     emptyDir: {}
-  - name: agent-creds
-    secret:
-      secretName: template-agent-secret

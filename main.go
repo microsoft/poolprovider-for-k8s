@@ -27,8 +27,8 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		if isRequestHmacValid(req) {
 			var agentRequest AgentRequest
-			requestBody, err := ioutil.ReadAll(req.Body)
 
+			requestBody, err := ioutil.ReadAll(req.Body)
 			json.Unmarshal(requestBody, &agentRequest)
 
 			if err != nil {
@@ -36,7 +36,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 			} else if agentRequest.AgentId == "" {
 				writeJsonResponse(resp, http.StatusBadRequest, GetError(NoAgentIdError))
 			} else {
-				var pods = CreatePod(agentRequest.AgentId, agentRequest.AuthenticationToken)
+				var pods = CreatePod(agentRequest)
 				writeJsonResponse(resp, http.StatusCreated, pods)
 			}
 		} else {
