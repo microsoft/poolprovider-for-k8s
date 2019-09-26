@@ -1,5 +1,5 @@
 # Need to create the opaque secret vsts once in namespace azuredevops before running this app.
-# kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<PAT TOKEN> --from-literal=VSTS_ACCOUNT=<Account name>  --from-literal=VSTS_POOL=<Pool name> -n azuredevops
+# kubectl create secret generic vsts --from-literal=VSTS_SECRET=<SHAREDSECRET> -n azuredevops
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -51,7 +51,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.29
+      - image: divyanshm/k8s-poolprovider:v2.30
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
