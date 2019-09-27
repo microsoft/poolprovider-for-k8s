@@ -6,7 +6,7 @@ mkdir /azp/agent
 cd /azp/agent
 
 # Read download URL from the secret
-AZP_DOWNLOAD_URL = $(cat /vsts/agent/.url)
+AZP_DOWNLOAD_URL="$(cat /vsts/agent/.url)"
 
 # Download the requested agent, else fall back to the version that was default when this was released
 if [ -z "$AZP_DOWNLOAD_URL" ]; then

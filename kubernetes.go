@@ -81,19 +81,32 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 
 	podClient := cs.CoreV1().Pods("azuredevops")
 
+    secretClient := cs.CoreV1().Secrets("azuredevops")
+	
+	// Get the secret with this agentId
+	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
+	if secrets == nil || len(secrets.Items) == 0 {
+		return getFailure(response, errors.New("Could not find running pod with AgentId"+agentId))
+	}
+	
 	// Get the pod with this agentId
 	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if pods == nil || len(pods.Items) == 0 {
 		return getFailure(response, errors.New("Could not find running pod with AgentId"+agentId))
 	}
 
-	err1 := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
+	err1 := secretClient.Delete(secrets.Items[0].GetName(), &metav1.DeleteOptions{})
 	if err1 != nil {
 		return getFailure(response, err1)
 	}
 
+	err2 := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
+	if err2 != nil {
+		return getFailure(response, err2)
+	}
+
 	response.Status = "success"
-	response.Message = "Deleted " + pods.Items[0].GetName()
+	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret "+ secrets.Items[0].GetName()
 	return response
 }
 
@@ -135,6 +148,13 @@ func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
 	secret := getAgentSecret()
 	agentSettings, _ := json.Marshal(request.AgentConfiguration.AgentSettings)
 	agentCredentials, _ := json.Marshal(request.AgentConfiguration.AgentCredentials)
+
+	if request.AgentId != "" {
+		// Set the agentId as label of the secret if specified
+		secret.SetLabels(map[string]string{
+			agentIdLabel: request.AgentId,
+		})
+	}
 
 	secret.Data[".agent"] = ([]byte(string(agentSettings)))
 	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
