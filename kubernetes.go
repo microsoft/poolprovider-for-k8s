@@ -51,24 +51,37 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	return response
 }
 
-func DeletePod(podname string) PodResponse {
+func GetBuildKitPod(key string) PodResponse {
+	
 	cs, err := GetClientSet()
-	response := PodResponse{"failure", ""}
+
+	var response PodResponse
 	if err != nil {
-		response.Message = err.Error()
-		return response
+		return getFailure(response, err)
 	}
+
+	listOptions := metav1.ListOptions{
+        LabelSelector: "role=buildkit",
+    }
 
 	podClient := cs.CoreV1().Pods("azuredevops")
-
-	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
+	podlist, err2 := podClient.List(listOptions)
 	if err2 != nil {
-		response.Message = "podclient delete error: " + err2.Error()
-		return response
+		return getFailure(response, err)
 	}
 
+	var nodes []string
+	
+	for _, items := range podlist.Items {
+		s := items.GetName()
+		if s != "" {
+			nodes = append(nodes, s)
+		}
+	}
+
+	chosen:= ComputeConsistentHash(nodes, key)
 	response.Status = "success"
-	response.Message = "Deleted " + podname
+	response.Message = chosen
 	return response
 }
 

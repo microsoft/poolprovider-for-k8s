@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: vsts-agent
-    image: divyanshm/agent:v1.1
+    image: prebansa/myagent:v3.29
     env:
     - name: DOCKER_HOST
       value: tcp://localhost:2375
