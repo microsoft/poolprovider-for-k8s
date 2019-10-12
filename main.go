@@ -17,7 +17,7 @@ func main() {
 	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
-	s.HandleFunc("/consistenthash", func(w http.ResponseWriter, r *http.Request) { HashingHandler(w, r) })
+	s.HandleFunc("/getBuildPod", func(w http.ResponseWriter, r *http.Request) { GetBuildPodHandler(w, r) })
 
 	// Start HTTP Server with request logging
 	log.Fatal(http.ListenAndServe(":8082", s))
@@ -74,8 +74,8 @@ func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
 	writeJsonResponse(resp, http.StatusCreated, emptyResponse)
 }
 
-func HashingHandler(resp http.ResponseWriter, req *http.Request) {
-	// HTTP method should be POST and the HMAC header should be valid
+func GetBuildPodHandler(resp http.ResponseWriter, req *http.Request) {
+
 	if req.Method == http.MethodGet {
 		keyHeader := "key"
 		headerVal := req.Header.Get(keyHeader)

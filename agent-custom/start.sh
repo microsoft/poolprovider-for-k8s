@@ -14,7 +14,6 @@ if [ -z "$AZP_DOWNLOAD_URL" ]; then
 fi
 
 export AGENT_ALLOW_RUNASROOT="1"
-export RUNNING_AS_K8_POOLPROVIDER="1"
 
 print_header() {
   lightcyan='\033[1;36m'

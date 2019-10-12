@@ -7,6 +7,14 @@ metadata:
   labels:
     app: k8s-poolprovider
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-config
+  namespace: azuredevops
+data:
+  type: KUBERNETES
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -28,6 +36,7 @@ metadata:
   namespace: azuredevops
   labels:
     app: k8s-poolprovider
+    identifier: k8loadbalancer
 spec:
   type: LoadBalancer
   ports:

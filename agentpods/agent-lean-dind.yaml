@@ -5,10 +5,15 @@ metadata:
 spec:
   containers:
   - name: vsts-agent
-    image: prebansa/myagent:v3.30
+    image: prebansa/myagent:v3.31
     env:
     - name: DOCKER_HOST
       value: tcp://localhost:2375
+    - name: RUNNING_ON
+      valueFrom:
+        configMapKeyRef:
+          name: kubernetes-config
+          key: type
     volumeMounts:
     - name: agent-creds
       mountPath: "/vsts/agent"
