@@ -21,6 +21,9 @@ RUN /usr/bin/curl -LO https://storage.googleapis.com/kubernetes-release/release/
      && chmod +x ./kubectl  \
      &&  mv ./kubectl /usr/local/bin/kubectl
 
+RUN /usr/bin/curl -fSL https://github.com/genuinetools/img/releases/download/v0.5.7/img-linux-amd64 -o /usr/local/bin/img \
+        && chmod +x /usr/local/bin/img
+
 WORKDIR /azp
 
 COPY ./start.sh .
