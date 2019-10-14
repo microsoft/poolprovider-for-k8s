@@ -5,7 +5,6 @@ metadata:
   namespace: {{ .Values.app.namespace }}
   labels:
     app: {{ .Values.app.name }}
-    identifier: k8loadbalancer
 spec:
   type: LoadBalancer
   ports:
