@@ -1,13 +1,21 @@
 package main
 
 import (
-	"github.com/serialx/hashring"
+	"stathat.com/c/consistent"
 )
 
 func ComputeConsistentHash(nodes []string, key string) (string) {
-	ring := hashring.New(nodes)
-	x, ok := ring.GetNode(key)
-	if !ok {
+	c := consistent.New()
+
+	for _, items := range nodes {
+		s := items
+		if s != "" {
+			c.Add(s)
+		}
+	}
+
+	x, err := c.Get(key)
+	if err != nil {
 		return ""
 	}
 	return x
