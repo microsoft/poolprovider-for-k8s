@@ -31,6 +31,7 @@ RUN BUILDKITVERSION=$(curl -s "https://api.github.com/repos/moby/buildkit/releas
      && chmod +x ./bin/buildctl && chmod +x ./bin/buildkitd && chmod +x ./bin/buildkit-runc \
      && mv ./bin/buildctl /usr/local/bin/ && mv ./bin/buildkitd /usr/local/bin/ && mv ./bin/buildkit-runc /usr/local/bin/
 
+# setting work directory
 WORKDIR /azp/agent
 
 RUN VSTSVERSION=$(curl -s "https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest" | jq -r .tag_name[1:]) \
