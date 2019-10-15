@@ -18,4 +18,4 @@ spec:
         name: {{ .Values.app.name }}
         command: ["/app/main"]
         ports:
-        - containerPort: 8082
+        - containerPort: 8080

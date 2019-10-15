@@ -17,10 +17,10 @@ func main() {
 	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
-	s.HandleFunc("/getBuildPod", func(w http.ResponseWriter, r *http.Request) { GetBuildPodHandler(w, r) })
+	s.HandleFunc("/buildPod", func(w http.ResponseWriter, r *http.Request) { GetBuildPodHandler(w, r) })
 
 	// Start HTTP Server with request logging
-	log.Fatal(http.ListenAndServe(":8082", s))
+	log.Fatal(http.ListenAndServe(":8080", s))
 }
 
 func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
