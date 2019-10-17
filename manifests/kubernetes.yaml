@@ -59,7 +59,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: prebansa/k8spoolprovider:v5.8
+      - image: prebansa/k8spoolprovider:v6.2
         name: k8s-poolprovider
         command: ["/app/main"]
         ports:
