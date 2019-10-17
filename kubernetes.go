@@ -18,16 +18,17 @@ type PodResponse struct {
 	Message string
 }
 
+type k8s struct {
+	clientset kubernetes.Interface
+}
+
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
 func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
-	cs, err := GetClientSet()
+	cs := CreateClientSet()
 
 	var response AgentProvisionResponse
-	if err != nil {
-		return getFailureResponse(response, err)
-	}
 
 	secret := createSecret(cs, agentRequest)
 	pod, err := getAgentSpecification(agentRequest.AgentId)
@@ -40,7 +41,7 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 
 	//append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_TOKEN", Value: token})
 
-	podClient := cs.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 	_, err2 := podClient.Create(pod)
 	if err2 != nil {
 		return getFailureResponse(response, err)
@@ -52,26 +53,22 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 }
 
 func GetBuildKitPod(key string) PodResponse {
-	
-	cs, err := GetClientSet()
+	cs := CreateClientSet()
 
 	var response PodResponse
-	if err != nil {
-		return getFailure(response, err)
-	}
 
 	listOptions := metav1.ListOptions{
         LabelSelector: "role=buildkit",
     }
 
-	podClient := cs.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 	podlist, err2 := podClient.List(listOptions)
 	if err2 != nil {
-		return getFailure(response, err)
+		return getFailure(response, err2)
 	}
 
 	var nodes []string
-	
+
 	for _, items := range podlist.Items {
 		s := items.GetName()
 		if s != "" {
@@ -86,15 +83,12 @@ func GetBuildKitPod(key string) PodResponse {
 }
 
 func DeletePodWithAgentId(agentId string) PodResponse {
-	cs, err := GetClientSet()
+	cs := CreateClientSet()
 	var response PodResponse
-	if err != nil {
-		return getFailure(response, err)
-	}
 
-	podClient := cs.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 
-    secretClient := cs.CoreV1().Secrets("azuredevops")
+    secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
 	
 	// Get the secret with this agentId
 	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
@@ -157,7 +151,7 @@ func getAgentSecret() *v1.Secret {
 	return &secret
 }
 
-func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
+func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
 	secret := getAgentSecret()
 	agentSettings, _ := json.Marshal(request.AgentConfiguration.AgentSettings)
 	agentCredentials, _ := json.Marshal(request.AgentConfiguration.AgentCredentials)
@@ -173,7 +167,7 @@ func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
 	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
 	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
 
-	secretClient := cs.CoreV1().Secrets("azuredevops")
+	secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
 	secret2, err := secretClient.Create(secret)
 
 	if err != nil {

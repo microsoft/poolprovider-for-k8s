@@ -6,7 +6,7 @@ replicaCount: 1
 
 app:
   namespace: azuredevops
-  name: k8s-poolprovider
+  name: azure-pipelines-pool
 
 rbac:
   name: pipelineprovider
