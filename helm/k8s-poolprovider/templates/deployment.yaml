@@ -12,7 +12,6 @@ spec:
         app: {{ .Values.app.name }}
         tier: frontend
     spec:
-      serviceAccountName: {{ .Values.rbac.name }}
       containers:
       - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         name: {{ .Values.app.name }}
