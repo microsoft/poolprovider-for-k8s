@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- users/prebansa/buidctl
+- users/prebansa/buildctl
 
 pool:
   vmImage: 'ubuntu-latest'
