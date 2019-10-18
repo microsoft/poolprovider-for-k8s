@@ -13,6 +13,7 @@ func TestCreatePod(t *testing.T) {
 
 	//clientset := fake.NewSimpleClientset()
 	pod := CreatePod(agentrequest)
+	
 	//secret := createSecret(&clientset,agentrequest)
 	if (pod.Accepted == true){
 		fmt.Println("Pod created", pod)
