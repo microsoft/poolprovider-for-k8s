@@ -5,21 +5,16 @@ metadata:
 spec:
   containers:
   - name: vsts-agent
-    image: divyanshm/agent:v1.1
+    image: prebansa/myagent:v5.16
     env:
     - name: DOCKER_HOST
       value: tcp://localhost:2375
+    - name: RUNNING_ON
+      valueFrom:
+        configMapKeyRef:
+          name: kubernetes-config
+          key: type
     volumeMounts:
     - name: agent-creds
       mountPath: "/vsts/agent"
       readOnly: true
-  - name: dind-daemon
-    image: docker:18.09.6-dind
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - name: agent-pv-storage
-      mountPath: /var/lib/docker
-  volumes:
-  - name: agent-pv-storage
-    emptyDir: {}

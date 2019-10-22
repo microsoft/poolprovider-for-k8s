@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
-
+    "log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -18,99 +18,119 @@ type PodResponse struct {
 	Message string
 }
 
+type k8s struct {
+	clientset kubernetes.Interface
+}
+
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
 func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
-	cs, err := GetClientSet()
+	cs := CreateClientSet()
 
+	log.Println("Starting pod creation")
 	var response AgentProvisionResponse
-	if err != nil {
-		return getFailureResponse(response, err)
-	}
 
+	log.Println("create secret called")
 	secret := createSecret(cs, agentRequest)
-	pod, err := getAgentSpecification(agentRequest.AgentId)
+
+	// parse agent version
+	agentVersion := agentRequest.AgentConfiguration.AgentVersion
+
+	log.Println("Fetch the agent yaml to be applied")
+	pod, err := getAgentSpecification(agentRequest.AgentId, agentVersion)
+
 	if err != nil {
 		return getFailureResponse(response, err)
 	}
 
 	// Mount the secrets as a volume
 	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(secret.Name))
+	log.Println("secrets mounted as volume")
 
-	//append(p1.Spec.Containers[0].Env, v1.EnvVar{Name: "VSTS_TOKEN", Value: token})
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 
-	podClient := cs.CoreV1().Pods("azuredevops")
 	_, err2 := podClient.Create(pod)
 	if err2 != nil {
 		return getFailureResponse(response, err)
 	}
+
+	log.Println("Pod creation done")
 
 	response.Accepted = true
 	response.ResponseType = "Success"
 	return response
 }
 
-func DeletePod(podname string) PodResponse {
-	cs, err := GetClientSet()
-	response := PodResponse{"failure", ""}
-	if err != nil {
-		response.Message = err.Error()
-		return response
-	}
+func GetBuildKitPod(key string) PodResponse {
+	cs := CreateClientSet()
 
-	podClient := cs.CoreV1().Pods("azuredevops")
+	var response PodResponse
 
-	err2 := podClient.Delete(podname, &metav1.DeleteOptions{})
+	listOptions := metav1.ListOptions{
+        LabelSelector: "role=buildkit",
+    }
+
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
+	podlist, err2 := podClient.List(listOptions)
 	if err2 != nil {
-		response.Message = "podclient delete error: " + err2.Error()
-		return response
+		return getFailure(response, err2)
 	}
+	log.Println("Fetched list of pods configured as buildkit stateful pods")
+	var nodes []string
 
+	for _, items := range podlist.Items {
+		s := items.GetName()
+		if s != "" {
+			nodes = append(nodes, s)
+		}
+	}
+	
+	log.Println("Fetching the target pod using consistent hash")
+	chosen:= ComputeConsistentHash(nodes, key)
 	response.Status = "success"
-	response.Message = "Deleted " + podname
+	response.Message = chosen
 	return response
 }
 
 func DeletePodWithAgentId(agentId string) PodResponse {
-	cs, err := GetClientSet()
+	cs := CreateClientSet()
 	var response PodResponse
-	if err != nil {
-		return getFailure(response, err)
-	}
 
-	podClient := cs.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 
-    secretClient := cs.CoreV1().Secrets("azuredevops")
+    secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
 	
 	// Get the secret with this agentId
 	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if secrets == nil || len(secrets.Items) == 0 {
-		return getFailure(response, errors.New("Could not find running pod with AgentId"+agentId))
+		return getFailure(response, errors.New("Could not find secret with AgentId "+agentId))
 	}
 	
 	// Get the pod with this agentId
 	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if pods == nil || len(pods.Items) == 0 {
-		return getFailure(response, errors.New("Could not find running pod with AgentId"+agentId))
+		return getFailure(response, errors.New("Could not find running pod with AgentId "+agentId))
 	}
 
 	err1 := secretClient.Delete(secrets.Items[0].GetName(), &metav1.DeleteOptions{})
 	if err1 != nil {
 		return getFailure(response, err1)
 	}
+	log.Println("Delete agent secret done")
 
 	err2 := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
 	if err2 != nil {
 		return getFailure(response, err2)
 	}
+	log.Println("Delete agent pod done")
 
 	response.Status = "success"
 	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret "+ secrets.Items[0].GetName()
 	return response
 }
 
-func getAgentSpecification(agentId string) (*v1.Pod, error) {
+func getAgentSpecification(agentId string, agentVersion string) (*v1.Pod, error) {
 	// Defaulting to use the DIND image, the podname can be exposed as a parameter and the user can then select which
 	// image will be used to create the agent.
 	podname := "agent-lean-dind"
@@ -131,12 +151,17 @@ func getAgentSpecification(agentId string) (*v1.Pod, error) {
 		})
 	}
 
+	/* uncomment this when using CI pipeline synched with agent releas
+	p1.Spec.Containers[0].Image = "prebansa/myagent:"+agentVersion
+	*/
+
 	return &p1, nil
 }
 
 func getAgentSecret() *v1.Secret {
 	var secret v1.Secret
 
+	log.Println("Reading agent-secret.yaml")
 	dat, _ := ioutil.ReadFile("agentpods/agent-secret.yaml")
 	var secretYaml = string(dat)
 	yaml.Unmarshal([]byte(secretYaml), &secret)
@@ -144,8 +169,10 @@ func getAgentSecret() *v1.Secret {
 	return &secret
 }
 
-func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
+func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
 	secret := getAgentSecret()
+
+	log.Println("parsing secret data from agent request")
 	agentSettings, _ := json.Marshal(request.AgentConfiguration.AgentSettings)
 	agentCredentials, _ := json.Marshal(request.AgentConfiguration.AgentCredentials)
 
@@ -159,14 +186,15 @@ func createSecret(cs *kubernetes.Clientset, request AgentRequest) *v1.Secret {
 	secret.Data[".agent"] = ([]byte(string(agentSettings)))
 	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
 	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
+	secret.Data[".agentVersion"] = ([]byte(request.AgentConfiguration.AgentVersion))
 
-	secretClient := cs.CoreV1().Secrets("azuredevops")
+	secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
 	secret2, err := secretClient.Create(secret)
 
 	if err != nil {
 		secret2.Name = "newname"
 	}
-
+	log.Println("Secret creation done")
 	return secret2
 }
 

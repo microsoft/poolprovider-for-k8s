@@ -7,6 +7,14 @@ metadata:
   labels:
     app: k8s-poolprovider
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-config
+  namespace: azuredevops
+data:
+  type: KUBERNETES
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -24,14 +32,14 @@ roleRef:
 apiVersion: v1
 kind: Service
 metadata:
-  name: k8s-poolprovider
+  name: azure-pipelines-pool
   namespace: azuredevops
   labels:
     app: k8s-poolprovider
 spec:
   type: LoadBalancer
   ports:
-    - port: 8082
+    - port: 8080
   selector:
     app: k8s-poolprovider
     tier: frontend
@@ -51,11 +59,17 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: divyanshm/k8s-poolprovider:v2.30
+      - image: prebansa/k8s-poolprovider:v1.23
         name: k8s-poolprovider
         command: ["/app/main"]
+        env:
+        - name: VSTS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vsts
+              key: VSTS_SECRET
         ports:
-        - containerPort: 8082
+        - containerPort: 8080
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -66,8 +80,8 @@ metadata:
     app: k8s-poolprovider
 spec:
   backend:
-    serviceName: k8s-poolprovider
-    servicePort: 8082
+    serviceName: azure-pipelines-pool
+    servicePort: 8080
 ---
 apiVersion: v1
 kind: Service

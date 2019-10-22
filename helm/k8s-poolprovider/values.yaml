@@ -6,15 +6,15 @@ replicaCount: 1
 
 app:
   namespace: azuredevops
-  name: k8s-poolprovider
+  name: azure-pipelines-pool
 
 rbac:
   name: pipelineprovider
   clusterRole: admin
 
 image:
-  repository: divyanshm/k8s-poolprovider
-  tag: v2.30
+  repository: prebansa/k8s-poolprovider
+  tag: v1.23
   pullPolicy: IfNotPresent
 
 vsts:

@@ -8,7 +8,7 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-    - port: 8082
+    - port: 8080
   selector:
     app: {{ .Values.app.name }}
     tier: frontend
@@ -23,4 +23,4 @@ metadata:
 spec:
   backend:
     serviceName: {{ .Values.app.name }}
-    servicePort: 8082
+    servicePort: 8080

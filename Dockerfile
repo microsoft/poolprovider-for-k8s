@@ -11,5 +11,5 @@ RUN go build -o main .
 
 COPY agentpods/* agentpods/
 
-EXPOSE 8082
+EXPOSE 8080
 CMD ["/app/main"]

@@ -18,4 +18,5 @@ require (
 	k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
 	k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
 	k8s.io/utils v0.0.0-20190829053155-3a4a5477acf8 // indirect
+	stathat.com/c/consistent v1.0.0
 )

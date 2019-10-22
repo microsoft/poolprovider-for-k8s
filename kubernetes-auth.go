@@ -7,7 +7,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/kubernetes/fake"
 )
+
+var client k8s
 
 // Gets the application client set. This can be used to initialize the various Kubernetes clients.
 // Uses in cliuster configuration when app is running inside the cluster, or kubeconfig file from
@@ -59,4 +62,21 @@ func homeDir() string {
 
 	// Windows
 	return os.Getenv("USERPROFILE")
+}
+
+func CreateClientSet() *k8s {
+	
+	//client = k8s{}
+	testingMode := os.Getenv("COUNTTEST")
+	
+	if testingMode == "1" || testingMode == "2" {
+		if testingMode == "1" {
+			client.clientset = fake.NewSimpleClientset()
+			os.Setenv("COUNTTEST","2")
+		}
+	} else {
+	  	cs, _ := GetClientSet()
+	  	client.clientset = cs
+	}
+	return &client
 }
