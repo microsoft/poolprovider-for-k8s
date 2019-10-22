@@ -13,8 +13,8 @@ rbac:
   clusterRole: admin
 
 image:
-  repository: prebansa/k8spoolprovider
-  tag: v6.2
+  repository: prebansa/k8s-poolprovider
+  tag: v1.23
   pullPolicy: IfNotPresent
 
 vsts:
