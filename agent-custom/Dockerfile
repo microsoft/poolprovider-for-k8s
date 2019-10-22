@@ -32,8 +32,14 @@ RUN BUILDKITVERSION=$(curl -s "https://api.github.com/repos/moby/buildkit/releas
      && mv ./bin/buildctl /usr/local/bin/ && mv ./bin/buildkitd /usr/local/bin/ && mv ./bin/buildkit-runc /usr/local/bin/
 
 # setting work directory
-WORKDIR /azp
+WORKDIR /azp/agent
 
+RUN VSTSVERSION=$(curl -s "https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest" | jq -r .tag_name[1:]) \
+     && echo $VSTSVERSION \
+     && curl -LO https://vstsagentpackage.azureedge.net/agent/${VSTSVERSION}/vsts-agent-linux-x64-${VSTSVERSION}.tar.gz \
+     && tar -zxvf vsts-agent-linux-x64-${VSTSVERSION}.tar.gz
+
+WORKDIR /azp
 COPY ./start.sh .
 RUN chmod +x start.sh
 

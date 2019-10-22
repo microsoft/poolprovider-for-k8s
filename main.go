@@ -26,7 +26,9 @@ func main() {
 func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	// HTTP method should be POST and the HMAC header should be valid
 	if req.Method == http.MethodPost {
+		log.Println("Recieved agent acquire request ....")
 		if isRequestHmacValid(req) {
+			log.Println("Hmac Validated")
 			var agentRequest AgentRequest
 
 			requestBody, err := ioutil.ReadAll(req.Body)
@@ -37,6 +39,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 			} else if agentRequest.AgentId == "" {
 				writeJsonResponse(resp, http.StatusBadRequest, GetError(NoAgentIdError))
 			} else {
+				log.Println("Calling create pod")
 				var pods = CreatePod(agentRequest)
 				writeJsonResponse(resp, http.StatusCreated, pods)
 			}
@@ -49,8 +52,11 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
+
 	if req.Method == http.MethodPost {
+		log.Println("Recieved release agent request ....")
 		if isRequestHmacValid(req) {
+			log.Println("Hmac Validated")
 			var agentRequest ReleaseAgentRequest
 			requestBody, _ := ioutil.ReadAll(req.Body)
 			json.Unmarshal(requestBody, &agentRequest)
@@ -58,6 +64,7 @@ func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 			if agentRequest.AgentId == "" {
 				writeJsonResponse(resp, http.StatusBadRequest, GetError(NoAgentIdError))
 			} else {
+				log.Println("Calling delete pod")
 				var pods = DeletePodWithAgentId(agentRequest.AgentId)
 				writeJsonResponse(resp, http.StatusCreated, pods)
 			}
@@ -76,9 +83,11 @@ func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
 
 func GetBuildPodHandler(resp http.ResponseWriter, req *http.Request) {
 
+	log.Println("Recieved GetBuildPod request ....")
 	if req.Method == http.MethodGet {
 		keyHeader := "key"
 		headerVal := req.Header.Get(keyHeader)
+		log.Println("Calling getbuildkit pod")
 		var pods = GetBuildKitPod(headerVal)
 		writeJsonResponse(resp, http.StatusCreated, pods)
 	} else {

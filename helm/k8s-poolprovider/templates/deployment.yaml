@@ -16,5 +16,11 @@ spec:
       - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         name: {{ .Values.app.name }}
         command: ["/app/main"]
+        env:
+        - name: VSTS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vsts
+              key: VSTS_SECRET
         ports:
         - containerPort: 8080

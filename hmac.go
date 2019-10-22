@@ -3,19 +3,21 @@ package main
 import (
 	"os"
 	"hash"
-
+    "encoding/hex"
 	"crypto/sha512"
 	"crypto/hmac"
+	"log"
 )
 
-func ComputeHash(message string) [] byte {
+func ComputeHash(message string) string {
 	hashAlgorithm := GetHashAlgorithm()
 	if(hashAlgorithm == nil) {
-		return nil;
+		return "";
 	}
 
 	hashAlgorithm.Write([]byte(message))
-	hashedMessage := hashAlgorithm.Sum(nil)
+	
+	hashedMessage := hex.EncodeToString(hashAlgorithm.Sum(nil))
 
 	return hashedMessage
 }
@@ -28,8 +30,13 @@ func ValidateHash(message, inputHmac string) bool {
 
 	hashAlgorithm.Write([]byte(message))
 	expectedMAC := hashAlgorithm.Sum(nil)
-	
-	return hmac.Equal([]byte(inputHmac), expectedMAC)
+
+	//return hmac.Equal(inputHMACbytearr, expectedMAC)
+	inputHMacArr, err := hex.DecodeString(inputHmac)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return hmac.Equal(inputHMacArr, expectedMAC)
 }
 
 func GetHashAlgorithm() hash.Hash {

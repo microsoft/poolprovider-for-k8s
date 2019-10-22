@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: vsts-agent
-    image: prebansa/myagent:v5.9
+    image: prebansa/myagent:v5.16
     env:
     - name: DOCKER_HOST
       value: tcp://localhost:2375
@@ -18,13 +18,3 @@ spec:
     - name: agent-creds
       mountPath: "/vsts/agent"
       readOnly: true
-  - name: dind-daemon
-    image: docker:18.09.6-dind
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - name: agent-pv-storage
-      mountPath: /var/lib/docker
-  volumes:
-  - name: agent-pv-storage
-    emptyDir: {}
