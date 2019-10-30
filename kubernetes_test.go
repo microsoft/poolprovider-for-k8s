@@ -209,4 +209,5 @@ func CreateDummyBuildKitPod() {
 
 func SetTestingEnvironmentVariables() {
 	os.Setenv("COUNTTEST","1")
+	os.Setenv("VSTS_SECRET","sharedsecret1234")
 }
