@@ -3,17 +3,12 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- master
-
 pool:
-  vmImage: 'ubuntu-latest'
-
+  name: helmpools5
 steps:
-- task: Docker@2
-  displayName: buildAndPush
+- task: ContainerBuild@0
+  displayName: 'Container Build Task'
   inputs:
-    containerRegistry: dockerconnection
-    repository: prebansa/myagent
-    Dockerfile: 'agent-custom/Dockerfile'
-    buildContext: 'agent-custom'
+    poolService: 'azure-pipelines-pool'
+    repository: prebansa/dockerbuildpush
+    Dockerfile: Dockerfile
