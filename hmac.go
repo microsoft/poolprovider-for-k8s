@@ -25,7 +25,7 @@ func ComputeHash(message string) string {
 func ValidateHash(message, inputHmac string) bool {
 	hashAlgorithm := GetHashAlgorithm()
 	if(hashAlgorithm == nil) {
-		return true;
+		return false;
 	}
 
 	hashAlgorithm.Write([]byte(message))
