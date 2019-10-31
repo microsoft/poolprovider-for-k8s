@@ -5,6 +5,9 @@
 
 pool:
   name: helmpools5
+
+container: mcr.microsoft.com/dotnet/core/sdk:2.2
+
 steps:
 - task: Bash@3
   inputs:
