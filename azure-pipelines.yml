@@ -6,6 +6,7 @@
 pool:
   name: helmpools5
 steps:
-- task: ContainerBuild@0
+- task: ContainerBuild@0 
+  displayName: Container Build Task
   inputs:
     Dockerfile: 'Dockerfile'
