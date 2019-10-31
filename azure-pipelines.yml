@@ -6,7 +6,10 @@
 pool:
   name: helmpools5
 steps:
-- task: ContainerBuild@0 
-  displayName: Container Build Task
+- task: Bash@3
   inputs:
-    Dockerfile: 'Dockerfile'
+    targetType: 'inline'
+    script: |
+      # Write your commands here
+      
+      echo 'Hello world'
