@@ -30,3 +30,14 @@ func TestValidateHashShouldReturnFalse(t *testing.T) {
 	}
 
 }
+
+func TestValidateHashShouldReturnFalseIfSecretIsNotSet(t *testing.T) {
+
+	os.Setenv("VSTS_SECRET", "")
+	str := ComputeHash("teststring")
+	
+	check := ValidateHash("teststring",str)
+	if (check == true){
+		t.Errorf("Hmac validation failed")
+	}
+}
