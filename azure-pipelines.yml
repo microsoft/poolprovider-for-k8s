@@ -8,12 +8,3 @@ pool:
 
 #container: mcr.microsoft.com/dotnet/core/sdk:2.2
 container: mcr.microsoft.com/dotnet/core-nightly/sdk:2.2
-
-steps:
-- task: Bash@3
-  inputs:
-    targetType: 'inline'
-    script: |
-      # Write your commands here
-      
-      echo 'Hello world'
