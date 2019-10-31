@@ -7,8 +7,5 @@ pool:
   name: helmpools5
 steps:
 - task: ContainerBuild@0
-  displayName: 'Container Build Task'
   inputs:
-    poolService: 'azure-pipelines-pool'
-    repository: prebansa/dockerbuildpush
-    Dockerfile: Dockerfile
+    Dockerfile: 'Dockerfile'
