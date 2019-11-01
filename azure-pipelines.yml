@@ -8,3 +8,7 @@ pool:
 
 #container: mcr.microsoft.com/dotnet/core/sdk:2.2
 container: mcr.microsoft.com/dotnet/core-nightly/sdk:2.2
+
+- task: DockerInstaller@0
+  inputs:
+    dockerVersion: '17.09.0-ce'
