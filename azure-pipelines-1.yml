@@ -18,7 +18,7 @@ steps:
 
 - task: Kubernetes@1
   displayName: 'kubectl get'
-  name: clusterip
+  variables: clusterip
   inputs:
     kubernetesServiceEndpoint: sa
     command: get
@@ -31,7 +31,7 @@ steps:
    
    echo 'Hello world'
    
-   echo 'IP is '. $(clusterip.MyVar)
+   echo 'IP is '. $(clusterip)
    
   displayName: 'Bash Script'
 
