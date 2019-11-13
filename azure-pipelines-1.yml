@@ -65,7 +65,7 @@ steps:
     kubernetesServiceEndpoint: sa
     command: get
     arguments: 'service azure-pipelines-pool -n $(Build.BuildId)-build -o=jsonpath={.status.loadBalancer.ingress[0].ip}'
-	outputFormat: ''
+    outputFormat: ''
 
 - bash: |
    # Write your commands here
