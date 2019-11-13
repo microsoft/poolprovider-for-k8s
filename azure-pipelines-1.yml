@@ -145,5 +145,23 @@ jobs:
         which buildctl
   
 
+################################################################################
+- job: Connect_with_agent1
+################################################################################
+  pool:
+    name: '$(Build.BuildId)'
+  dependsOn: 
+  - Connect_with_agent
+  - Configure_poolprovider
+
+  steps:
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Write your commands here
+      
+        echo 'Hello world in agent'
+        which buildctl
   
 
