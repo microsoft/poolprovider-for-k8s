@@ -8,6 +8,7 @@ variables:
   poolname: '$(Build.BuildId)'
   URI: 'https://dev.azure.com/bansalpreeti1'
   targetSize: '1'
+  sharedsecret: sharedsecret1234
 
 steps:
 - task: HelmInstaller@1
