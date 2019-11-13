@@ -131,6 +131,8 @@ jobs:
 ################################################################################
   pool:
     vmImage: '$(Build.BuildId)'
+  dependsOn: 
+  - Configure_poolprovider
 
   steps:
   - task: Bash@3
