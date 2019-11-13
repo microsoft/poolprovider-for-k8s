@@ -13,7 +13,7 @@ jobs:
     poolname: '$(Build.BuildId)'
     URI: 'https://dev.azure.com/bansalpreeti1'
     targetSize: '1'
-    sharedSecret: sharedsecret1234
+    sharedSecret: 'sharedsecret1234'
 
   steps:
   - task: HelmInstaller@1
