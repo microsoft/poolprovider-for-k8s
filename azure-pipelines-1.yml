@@ -31,7 +31,7 @@ steps:
    
    echo 'Hello world'
    
-   echo 'IP is '. $(clusterip)
+   echo 'IP is '. $(clusterip.MyVar)
    
   displayName: 'Bash Script'
 
