@@ -4,7 +4,7 @@ trigger:
 jobs:
 
 ################################################################################
-- job: Configure pool provider agent
+- job: Configure poolprovider
 ################################################################################
   pool:
     vmImage: 'ubuntu-latest'
