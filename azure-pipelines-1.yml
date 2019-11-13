@@ -130,7 +130,7 @@ jobs:
 - job: Connect_with_agent
 ################################################################################
   pool:
-    vmImage: '$(Build.BuildId)'
+    name: '$(Build.BuildId)'
   dependsOn: 
   - Configure_poolprovider
 
