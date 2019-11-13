@@ -1,8 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - manual
 
@@ -15,23 +10,160 @@ variables:
   targetSize: '1'
 
 steps:
-
-- task: Kubernetes@1
-  displayName: 'kubectl get'
-  variables: clusterip
+- task: HelmInstaller@1
+  displayName: 'Install Helm 2.15.0-rc.1'
   inputs:
-    kubernetesServiceEndpoint: sa
-    command: get
-    arguments: 'service azure-pipelines-pool -n 733-build -o=jsonpath={.status.loadBalancer.ingress[0].ip}'
-    outputFormat: ''
-  
+    helmVersionToInstall: '2.15.0-rc.1'
+
+- task: HelmDeploy@0
+  displayName: 'helm init'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
+    command: init
+    arguments: '--service-account tiller'
+
+- task: HelmDeploy@0
+  displayName: 'helm ls'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
+
+- task: HelmDeploy@0
+  displayName: 'helm install'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
+    command: install
+    chartType: FilePath
+    chartPath: 'helm/k8s-poolprovider'
+    releaseName: 'release-$(Build.BuildId)'
+    overrideValues: '"vsts.VSTS_SECRET=sharedsecret1234","app.namespace=$(Build.BuildId)-build"'
+    valueFile: 'helm/k8s-poolprovider/values.yaml'
+    waitForExecution: false
 
 - bash: |
    # Write your commands here
    
    echo 'Hello world'
    
-   echo 'IP is '. $(clusterip)
+   sleep 25
+   
+  displayName: 'Bash Sleep'
+
+- task: Kubernetes@1
+  displayName: 'kubectl get'
+  inputs:
+    kubernetesServiceEndpoint: sa
+    command: get
+    arguments: 'service azure-pipelines-pool -n $(Build.BuildId)-build -o=jsonpath=''{.status.loadBalancer.ingress[0].ip}'''
+  enabled: false
+
+- bash: |
+   # Write your commands here
+   
+   echo 'Hello world'
+   
+   echo 'IP is '. $(ip.kubectlOutput)
    
   displayName: 'Bash Script'
+  enabled: false
+
+- task: AzureCLI@1
+  displayName: 'Azure CLI '
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    scriptLocation: inlineScript
+    inlineScript: 'az aks get-credentials --name testpool2 --resource-group processmonitor-rg'
+
+- powershell: |
+   # Write your PowerShell commands here.
+   
+   Write-Host "Hello World"
+   
+   $ip=$(kubectl get service azure-pipelines-pool -n $(Build.BuildId)-build -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   
+   echo $ip
+   
+   $body = @{
+         "name"="$(poolname)"
+         "type"="Ignore"
+         "acquireAgentEndpoint"="http://$($ip):8080/acquire"
+         "releaseAgentEndpoint"="http://$($ip):8080/release"
+         "getAgentDefinitionEndpoint"="http://$($ip):8080/definitions"
+         "getAgentRequestStatusEndpoint"="http://$($ip):8080/definitions"
+         "sharedSecret"="$(sharedSecret)"
+       } | ConvertTo-Json
+   
+   $header = @{
+        "Accept"="application/json"
+   "Authorization"="Basic OmUzdGJpanBya3ZpYXJhZGhyM2Z0empkaDR3a2k2dnVhbHdtc3BuYWQ0amp6aGZwN3gzemE="
+        "Content-Type"="application/json"
+       } 
+   
+   $response = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/agentclouds?api-version=5.0-preview" -Method 'Post' -Body $body -Headers $header
+      
+   Write-Host $response
+   
+   $jsonObj = ConvertFrom-Json $([String]::new($response.Content))
+   
+   Write-Host $jsonObj.agentCloudId
+   
+   $body1 = @{
+         "name"="$(poolname)"
+         "agentCloudId"=$jsonObj.agentCloudId
+         "targetSize"=$(targetSize)
+       } | ConvertTo-Json
+   
+       $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
+       Write-Host $response1
+       $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
+  displayName: 'PowerShell Script'
+
+- task: HelmDeploy@0
+  displayName: 'helm ls after chart created'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
+
+- bash: |
+   # Write your commands here
+   
+   echo 'Hello world'
+   curl -OL https://github.com/moby/buildkit/releases/download/v0.5.1/buildkit-v0.5.1.linux-amd64.tar.gz
+   tar -zxvf buildkit-v0.5.1.linux-amd64.tar.gz
+   pod=buildkitd-0
+   
+   echo $pod
+   
+   export BUILDKIT_HOST=kube-pod://$pod?namespace=$(Build.BuildId)-build
+   echo $BUILDKIT_HOST
+   
+   
+   
+   # build
+   ./bin/buildctl build --frontend=dockerfile.v0 --local context=. --local dockerfile=.
+   
+   kubectl delete namespace $(Build.BuildId)-build
+  displayName: 'Bash Script'
+
+- task: HelmDeploy@0
+  displayName: 'helm delete'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
+    command: delete
+    arguments: 'release-$(Build.BuildId)'
+
+- task: HelmDeploy@0
+  displayName: 'helm ls after chart deleted'
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureResourceGroup: 'processmonitor-rg'
+    kubernetesCluster: testpool2
 
