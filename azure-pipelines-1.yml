@@ -13,7 +13,7 @@ jobs:
     poolname: '$(Build.BuildId)'
     URI: 'https://dev.azure.com/bansalpreeti1'
     targetSize: '1'
-    sharedsecret: sharedsecret1234
+    sharedSecret: sharedsecret1234
 
   steps:
   - task: HelmInstaller@1
@@ -47,7 +47,7 @@ jobs:
       chartType: FilePath
       chartPath: 'helm/k8s-poolprovider'
       releaseName: 'release-$(Build.BuildId)'
-      overrideValues: '"vsts.VSTS_SECRET=sharedsecret1234","app.namespace=$(Build.BuildId)-build"'
+      overrideValues: '"vsts.VSTS_SECRET=$(sharedSecret)","app.namespace=$(Build.BuildId)-build"'
       valueFile: 'helm/k8s-poolprovider/values.yaml'
       waitForExecution: false
 
@@ -130,7 +130,7 @@ jobs:
 - job: Connect_with_agent
 ################################################################################
   pool:
-    name: '791'
+    name: '$(Build.BuildId)'
   dependsOn: 
   - Configure_poolprovider
 
