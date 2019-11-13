@@ -130,7 +130,7 @@ jobs:
 - job: Connect with agent
 ################################################################################
   pool:
-    vmImage: $(Build.BuildId)
+    vmImage: '$(Build.BuildId)'
 
   steps:
   - task: Bash@3
