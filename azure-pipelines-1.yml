@@ -125,6 +125,15 @@ jobs:
       kubernetesCluster: 'testpool2'
       command: 'ls'
 
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Write your commands here
+      
+        echo 'Hello world'
+        sleep 25
+
 
 ################################################################################
 - job: Connect_with_agent
