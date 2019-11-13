@@ -151,7 +151,6 @@ jobs:
   pool:
     name: '$(Build.BuildId)'
   dependsOn: 
-  - Connect_with_agent
   - Configure_poolprovider
 
   steps:
