@@ -90,7 +90,7 @@ jobs:
                "releaseAgentEndpoint"="http://$($ip):8080/release"
                "getAgentDefinitionEndpoint"="http://$($ip):8080/definitions"
                "getAgentRequestStatusEndpoint"="http://$($ip):8080/definitions"
-               "sharedSecret"=sharedsecret1234
+               "sharedSecret"="sharedsecret1234"
              } | ConvertTo-Json
          
          $header = @{
