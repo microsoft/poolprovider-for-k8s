@@ -137,7 +137,7 @@ jobs:
           }
         $body3 | ConvertTo-Json
         
-        $response4 = Invoke-WebRequest -Uri "$(URI)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $body3 -Headers $header
+        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $body3 -Headers $header
         
         Write-Host $response4
 
