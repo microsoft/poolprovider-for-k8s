@@ -178,5 +178,11 @@ stages:
             echo 'Hello world in agent'
             which buildctl
 
+      - task: ContainerBuild@0
+        inputs:
+          dockerRegistryServiceConnection: 'dock1'
+          repository: 'prebansa/testbuildctl'
+          Dockerfile: 'Dockerfile'
+
   
 
