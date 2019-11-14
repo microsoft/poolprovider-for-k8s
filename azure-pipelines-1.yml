@@ -117,6 +117,26 @@ jobs:
              $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
              Write-Host $response1
              $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
+        $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fp&__ver=2" -Method 'Get'  -Headers $header
+        
+        Write-Host $response2
+        
+        $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
+        
+        $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
+        
+        Write-Host "QueueId is ". $queueId
+        
+        $body3 = @[{
+             "authorized"=true
+             "id"="$($queueId)"
+             "name"="$($Build.BuildId)"
+             "type"="queue"
+            }] | ConvertTo-Json
+        
+        $response4 = Invoke-WebRequest -Uri "$(URI)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $body3 -Headers $header
+        
+        Write-Host $response4
 
   - task: HelmDeploy@0
     inputs:
