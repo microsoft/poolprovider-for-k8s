@@ -208,6 +208,10 @@ stages:
             
              Write-Host $response
              Write-Host 'Deleted Agent Pool'
+
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: '2.15.0-rc.1'
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
