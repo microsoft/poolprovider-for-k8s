@@ -1,11 +1,13 @@
 trigger:
 - manual
 
-jobs:
+stages:
+- stage: A
+  jobs:
 
-################################################################################
-- job: Configure_poolprovider
-################################################################################
+  ################################################################################
+  - job: Configure_poolprovider
+  ################################################################################
   pool:
     vmImage: 'ubuntu-latest'
 
@@ -157,42 +159,26 @@ jobs:
         echo 'Hello world'
         sleep 25
 
+- stage: B
+  jobs:
 
-################################################################################
-- job: Connect_with_agent
-################################################################################
+  ################################################################################
+  - job: Connect_with_agent
+  ################################################################################
   pool:
     name: '$(Build.BuildId)'
-  dependsOn: 
-  - Configure_poolprovider
+    dependsOn: 
+    - Configure_poolprovider
 
-  steps:
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        # Write your commands here
+    steps:
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Write your commands here
       
-        echo 'Hello world in agent'
-        which buildctl
-  
+          echo 'Hello world in agent'
+          which buildctl
 
-################################################################################
-- job: Connect_with_agent1
-################################################################################
-  pool:
-    name: '$(Build.BuildId)'
-  dependsOn: 
-  - Configure_poolprovider
-
-  steps:
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        # Write your commands here
-      
-        echo 'Hello world in agent'
-        which buildctl
   
 
