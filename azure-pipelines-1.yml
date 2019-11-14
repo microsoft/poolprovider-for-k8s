@@ -2,9 +2,11 @@ trigger:
 - manual
 
 variables:
+  poolname: '$(Build.BuildId)'
   URI: 'https://dev.azure.com/bansalpreeti1'
   projectname: 'test2'
   sharedSecret: 'sharedsecret1234'
+  targetSize: '1'
 
 stages:
 - stage: Deploy_Pool_Provider_Agent
@@ -15,13 +17,6 @@ stages:
   ################################################################################
     pool:
       vmImage: 'ubuntu-latest'
-
-    variables:
-      poolname: '$(Build.BuildId)'
-      #URI: 'https://dev.azure.com/bansalpreeti1'
-      #projectname: 'test2'
-      targetSize: '1'
-      #sharedSecret: 'sharedsecret1234'
 
     steps:
       - task: HelmInstaller@1
@@ -64,7 +59,7 @@ stages:
             # Write your commands here
       
             echo 'Hello world'
-            sleep 25
+            sleep 15
 
       - task: AzureCLI@1
         displayName: 'Azure CLI '
@@ -77,13 +72,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            # Write your PowerShell commands here.
-      
-            Write-Host "Hello World"
-      
-            # Write your PowerShell commands here.
          
-            Write-Host "Hello World"
+            Write-Host "Executing powershell script"
          
             $ip=$(kubectl get service azure-pipelines-pool -n azuredevops -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
          
@@ -153,15 +143,6 @@ stages:
           kubernetesCluster: 'testpool2'
           command: 'ls'
 
-      - task: Bash@3
-        inputs:
-          targetType: 'inline'
-          script: |
-            # Write your commands here
-      
-            echo 'Hello world'
-            sleep 25
-
 - stage: Connect_with_agent_created_in_first_stage 
   jobs:
 
@@ -220,7 +201,7 @@ stages:
              $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
         
              Write-Host "QueueId is ". $queueId
-             $response = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/distributedtask/queues/$(Build.BuildId)" -Method 'Delete' -Headers $header
+             $response = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/distributedtask/queues/$(Build.BuildId)?api-version=5.0-preview" -Method 'Delete' -Headers $header
             
              Write-Host $response
              Write-Host 'Deleted Agent Pool'
