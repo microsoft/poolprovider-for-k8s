@@ -117,7 +117,7 @@ jobs:
              $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
              Write-Host $response1
              $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
-        $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fp&__ver=2" -Method 'Get'  -Headers $header
+        $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
         
         Write-Host $response2
         
