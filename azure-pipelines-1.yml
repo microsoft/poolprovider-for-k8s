@@ -18,7 +18,7 @@ stages:
       targetSize: '1'
       sharedSecret: 'sharedsecret1234'
 
-      steps:
+    steps:
       - task: HelmInstaller@1
         inputs:
           helmVersionToInstall: '2.15.0-rc.1'
