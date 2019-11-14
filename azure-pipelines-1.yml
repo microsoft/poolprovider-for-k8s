@@ -174,9 +174,9 @@ stages:
         targetType: 'inline'
         script: |
           # Write your commands here
-      
+          
           echo 'Hello world in agent'
-          which buildctl
+          which buidctl
 
   
 
