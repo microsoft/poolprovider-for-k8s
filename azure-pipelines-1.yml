@@ -1,6 +1,11 @@
 trigger:
 - manual
 
+variables:
+  URI: 'https://dev.azure.com/bansalpreeti1'
+  projectname: 'test2'
+  sharedSecret: 'sharedsecret1234'
+
 stages:
 - stage: Deploy_Pool_Provider_Agent
   jobs:
@@ -13,10 +18,10 @@ stages:
 
     variables:
       poolname: '$(Build.BuildId)'
-      URI: 'https://dev.azure.com/bansalpreeti1'
-      projectname: 'test2'
+      #URI: 'https://dev.azure.com/bansalpreeti1'
+      #projectname: 'test2'
       targetSize: '1'
-      sharedSecret: 'sharedsecret1234'
+      #sharedSecret: 'sharedsecret1234'
 
     steps:
       - task: HelmInstaller@1
@@ -48,7 +53,7 @@ stages:
           chartType: FilePath
           chartPath: 'helm/k8s-poolprovider'
           releaseName: 'release-$(Build.BuildId)'
-          overrideValues: '"vsts.VSTS_SECRET=sharedsecret1234"'
+          overrideValues: '"vsts.VSTS_SECRET=$(sharedSecret)"'
           valueFile: 'helm/k8s-poolprovider/values.yaml'
           waitForExecution: false
 
@@ -91,7 +96,7 @@ stages:
                "releaseAgentEndpoint"="http://$($ip):8080/release"
                "getAgentDefinitionEndpoint"="http://$($ip):8080/definitions"
                "getAgentRequestStatusEndpoint"="http://$($ip):8080/definitions"
-               "sharedSecret"="sharedsecret1234"
+               "sharedSecret"="$(sharedSecret)"
              } | ConvertTo-Json
          
             $header = @{
