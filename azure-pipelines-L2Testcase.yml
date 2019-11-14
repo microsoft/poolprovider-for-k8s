@@ -36,5 +36,5 @@ stages:
           command: 'init'
           upgradeTiller: false
           waitForExecution: false
-          arguments: '--service-account tiller''
+          arguments: '--service-account tiller'
 
