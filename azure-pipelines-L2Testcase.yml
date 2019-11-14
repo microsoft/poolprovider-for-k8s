@@ -213,7 +213,7 @@ stages:
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testpool2'
           command: 'delete'
@@ -222,7 +222,7 @@ stages:
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testpool2'
           command: 'ls'
