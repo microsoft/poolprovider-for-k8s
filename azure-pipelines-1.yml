@@ -176,7 +176,7 @@ stages:
             # Write your commands here
           
             echo 'Hello world in agent'
-            which buidctl
+            which buildctl
 
   
 
