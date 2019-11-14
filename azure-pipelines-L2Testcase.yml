@@ -68,11 +68,10 @@ stages:
           scriptLocation: 'inlineScript'
           inlineScript: 'az aks get-credentials --name testpool2 --resource-group processmonitor-rg'
        
-      - task: AzurePowerShell@4
+      - task: PowerShell@2
         inputs:
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          ScriptType: 'InlineScript'
-          Inline: |
+          targetType: 'inline'
+          script: |
             Write-Host "Executing powershell script"
                      
                         $ip=$(kubectl get service azure-pipelines-pool -n azuredevops -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -133,8 +132,7 @@ stages:
                         $here1 = ConvertTo-Json -InputObject @( $body3 )
                         $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $here1 -Headers $header
                     
-                        Write-Host $response4
-             
+                        Write-Host $response4       
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
