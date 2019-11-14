@@ -127,17 +127,18 @@ jobs:
         
         Write-Host "QueueId is ". $queueId
         
-        $body3 = @()
+        $body3 = @"
+                [
+                {
+                  "authorized":"true",
+                  "id":"$queueId",
+                  "name":"$(Build.BuildId)",
+                  "type":"queue" 
+                }
+                ]
+                "@
         
-        $body3 += [pscustomobject]@{
-            "authorized"="true"
-            "id"="$queueId"
-            "name"="$(Build.BuildId)"
-            "type"="queue"   
-          }
-        $body4 = $body3 | ConvertTo-Json
-        
-        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $body4 -Headers $header
+        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $body3 -Headers $header
         
         Write-Host $response4
 
