@@ -12,6 +12,7 @@ jobs:
   variables:
     poolname: '$(Build.BuildId)'
     URI: 'https://dev.azure.com/bansalpreeti1'
+    projectname: 'test2'
     targetSize: '1'
     sharedSecret: 'sharedsecret1234'
 
