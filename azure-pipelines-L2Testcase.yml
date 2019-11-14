@@ -50,6 +50,7 @@ stages:
           releaseName: 'release-$(Build.BuildId)'
           overrideValues: '"vsts.VSTS_SECRET=$(sharedSecret)"'
           valueFile: 'helm/k8s-poolprovider/values.yaml'
+          waitForExecution: false
 
       - task: Bash@3
         inputs:
