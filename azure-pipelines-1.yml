@@ -2,7 +2,7 @@ trigger:
 - manual
 
 stages:
-- stage: Deploy Pool Provider Agent
+- stage: Deploy_Pool_Provider_Agent
   jobs:
 
   ################################################################################
@@ -157,7 +157,7 @@ stages:
             echo 'Hello world'
             sleep 25
 
-- stage: Connect with agent created in first stage 
+- stage: Connect_with_agent_created_in_first_stage 
   jobs:
 
   ################################################################################
