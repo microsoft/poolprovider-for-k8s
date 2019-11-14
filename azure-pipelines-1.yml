@@ -2,7 +2,7 @@ trigger:
 - manual
 
 stages:
-- stage: A
+- stage: Deploy Pool Provider Agent
   jobs:
 
   ################################################################################
@@ -157,7 +157,7 @@ stages:
             echo 'Hello world'
             sleep 25
 
-- stage: B
+- stage: Connect with agent created in first stage 
   jobs:
 
   ################################################################################
@@ -165,10 +165,10 @@ stages:
   ################################################################################
     pool:
       name: '$(Build.BuildId)'
-      dependsOn: 
-       - Configure_poolprovider
+      #dependsOn: 
+       #- Configure_poolprovider
 
-      steps:
+    steps:
       - task: Bash@3
         inputs:
           targetType: 'inline'
