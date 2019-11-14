@@ -201,7 +201,7 @@ stages:
              $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
         
              Write-Host "QueueId is ". $queueId
-             $response = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/distributedtask/queues/$(queueId)?api-version=5.0-preview" -Method 'Delete' -Headers $header
+             $response = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/distributedtask/queues/$queueId?api-version=5.0-preview" -Method 'Delete' -Headers $header
             
              Write-Host $response
              Write-Host 'Deleted Agent Pool'
