@@ -28,11 +28,13 @@ stages:
         inputs:
           helmVersionToInstall: '2.15.0-rc.1'
       - task: HelmDeploy@0
-        displayName: 'helm init'
         inputs:
           connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testpool2'
           command: 'init'
-          arguments: '--service-account tiller'
+          upgradeTiller: false
+          waitForExecution: false
+          arguments: '--service-account tiller''
+
