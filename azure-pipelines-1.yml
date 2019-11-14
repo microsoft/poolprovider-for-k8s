@@ -163,20 +163,20 @@ stages:
   ################################################################################
   - job: Connect_with_agent
   ################################################################################
-  pool:
-    name: '$(Build.BuildId)'
-    dependsOn: 
-    - Configure_poolprovider
+    pool:
+      name: '$(Build.BuildId)'
+      dependsOn: 
+       - Configure_poolprovider
 
-    steps:
-    - task: Bash@3
-      inputs:
-        targetType: 'inline'
-        script: |
-          # Write your commands here
+      steps:
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Write your commands here
           
-          echo 'Hello world in agent'
-          which buidctl
+            echo 'Hello world in agent'
+            which buidctl
 
   
 
