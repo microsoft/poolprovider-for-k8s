@@ -130,8 +130,8 @@ jobs:
         $body3 = @()
         $body3 += [pscustomobject]@{
           "authorized"="true"
-          "id"="217"
-          "name"="878"
+          "id"="$queueId"
+          "name"="$(Build.BuildId)"
           "type"="queue"   
         }
             
