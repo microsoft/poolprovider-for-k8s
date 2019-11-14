@@ -20,10 +20,8 @@ stages:
 
       steps:
       - task: HelmInstaller@1
-        displayName: 'Install Helm 2.15.0-rc.1'
         inputs:
           helmVersionToInstall: '2.15.0-rc.1'
-
       - task: HelmDeploy@0
         displayName: 'helm init'
         inputs:
