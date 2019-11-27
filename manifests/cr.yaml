@@ -1,0 +1,38 @@
+apiVersion: demo.k8s.com/v1
+kind: PodConfig
+metadata:
+  name: podconfigcr
+  namespace: azuredevops
+spec:
+  agentPools:
+  - name: windows
+    spec:
+      containers:
+      - name: vsts-agent
+        image: prebansa/myagent:v5.17
+        env:
+        - name: RUNNING_ON
+          valueFrom:
+            configMapKeyRef:
+              name: kubernetes-config
+              key: type
+        volumeMounts:
+        - name: agent-creds
+          mountPath: "/vsts/agent"
+          readOnly: true
+  - name: linux
+    spec:
+      containers:
+      - name: vsts-agent
+        image: prebansa/myagent:v5.16
+        env:
+        - name: RUNNING_ON
+          valueFrom:
+            configMapKeyRef:
+              name: kubernetes-config
+              key: type
+        volumeMounts:
+        - name: agent-creds
+          mountPath: "/vsts/agent"
+          readOnly: true
+   
