@@ -5,11 +5,17 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"log"
+
+	v1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
+
 	"github.com/ghodss/yaml"
-    "log"
+	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // External callers calling into Kubernetes APIs via this package will get a PodResponse
@@ -22,8 +28,6 @@ type k8s struct {
 	clientset kubernetes.Interface
 }
 
-const agentIdLabel = "AgentId"
-
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
 func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	cs := CreateClientSet()
@@ -31,31 +35,25 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	log.Println("Starting pod creation")
 	var response AgentProvisionResponse
 
-	log.Println("create secret called")
-	secret := createSecret(cs, agentRequest)
-
 	// parse agent version
 	agentVersion := agentRequest.AgentConfiguration.AgentVersion
 
 	log.Println("Fetch the agent yaml to be applied")
-	pod, err := getAgentSpecification(agentRequest.AgentId, agentVersion)
+	pod, err := getAgentSpecification(agentRequest.AgentId, agentVersion, agentRequest)
 
 	if err != nil {
 		return getFailureResponse(response, err)
 	}
 
-	// Mount the secrets as a volume
-	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(secret.Name))
-	log.Println("secrets mounted as volume")
-
 	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 
 	_, err2 := podClient.Create(pod)
+
 	if err2 != nil {
-		return getFailureResponse(response, err)
+		return getFailureResponse(response, err2)
 	}
 
-	log.Println("Pod creation done")
+	log.Println("Pod creation done", pod)
 
 	response.Accepted = true
 	response.ResponseType = "Success"
@@ -68,8 +66,8 @@ func GetBuildKitPod(key string) PodResponse {
 	var response PodResponse
 
 	listOptions := metav1.ListOptions{
-        LabelSelector: "role=buildkit",
-    }
+		LabelSelector: "role=buildkit",
+	}
 
 	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 	podlist, err2 := podClient.List(listOptions)
@@ -85,9 +83,9 @@ func GetBuildKitPod(key string) PodResponse {
 			nodes = append(nodes, s)
 		}
 	}
-	
+
 	log.Println("Fetching the target pod using consistent hash")
-	chosen:= ComputeConsistentHash(nodes, key)
+	chosen := ComputeConsistentHash(nodes, key)
 	response.Status = "success"
 	response.Message = chosen
 	return response
@@ -99,16 +97,16 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 
 	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 
-    secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
-	
+	secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
+
 	// Get the secret with this agentId
-	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
+	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: AgentLabel + "=" + agentId})
 	if secrets == nil || len(secrets.Items) == 0 {
 		return getFailure(response, errors.New("Could not find secret with AgentId "+agentId))
 	}
-	
+
 	// Get the pod with this agentId
-	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
+	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: AgentLabel + "=" + agentId})
 	if pods == nil || len(pods.Items) == 0 {
 		return getFailure(response, errors.New("Could not find running pod with AgentId "+agentId))
 	}
@@ -126,36 +124,52 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	log.Println("Delete agent pod done")
 
 	response.Status = "success"
-	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret "+ secrets.Items[0].GetName()
+	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret " + secrets.Items[0].GetName()
 	return response
 }
 
-func getAgentSpecification(agentId string, agentVersion string) (*v1.Pod, error) {
-	// Defaulting to use the DIND image, the podname can be exposed as a parameter and the user can then select which
-	// image will be used to create the agent.
-	podname := "agent-lean-dind"
+func getAgentSpecification(agentId string, agentVersion string, agentRequest AgentRequest) (*v1.Pod, error) {
 
-	// If pod is to be created in a different namespace
-	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
-	// kubectl create secret generic vsts --from-literal=VSTS_TOKEN=<token> --from-literal=VSTS_ACCOUNT=<accountname>
-	dat, _ := ioutil.ReadFile("agentpods/" + podname + ".yaml")
+	var err error
 
-	var p1 v1.Pod
-	var podYaml = string(dat)
-	_ = yaml.Unmarshal([]byte(podYaml), &p1)
-
-	if agentId != "" {
-		// Set the agentId as label if specified
-		p1.SetLabels(map[string]string{
-			agentIdLabel: agentId,
-		})
+	var config *rest.Config
+	if config, err = rest.InClusterConfig(); err != nil {
+		glog.Fatalf("error creating client configuration: %v", err)
 	}
 
-	/* uncomment this when using CI pipeline synched with agent releas
-	p1.Spec.Containers[0].Image = "prebansa/myagent:"+agentVersion
-	*/
+	crdclient, err := v1alpha1.NewClient(config)
+	log.Println("rest client inside getspecification \n", crdclient)
+	//resp1, err := crdclient.PodConfigs("azuredevops").Get("podconfigcr")
+	resp1, err := crdclient.AzurePipelinePool("azuredevops").Get("azurepipelinepool-operator")
+	if err != nil {
+		log.Println("error fetching podconfig", err)
+	} else {
+		log.Println("resp \n", resp1)
+	}
 
-	return &p1, nil
+	labels := GenerateLabelsForPod(agentId)
+
+	log.Println("Add a Linux Pod using CRD")
+	pod := crdclient.AzurePipelinePool("azuredevops").AddNewPodForCR(resp1, agentId, labels, "linux")
+
+	log.Println("pod created ", pod)
+
+	cs := CreateClientSet()
+	log.Println("create secret called")
+        
+        podClient := cs.clientset.CoreV1().Pods("azuredevops")
+        webserverpod, _ := podClient.List(metav1.ListOptions{LabelSelector: "app=azurepipelinepool-operator"})
+
+	secret := createSecret(cs, agentRequest, &webserverpod.Items[0])
+
+	// Mount the secrets as a volume
+	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(secret.Name))
+	log.Println("secrets mounted as volume", pod)
+
+	AddOwnerRefToObject(pod, AsOwner(&webserverpod.Items[0]))
+	log.Println("Webserver pod added as owner reference to agent pod ")
+
+	return pod, nil
 }
 
 func getAgentSecret() *v1.Secret {
@@ -169,7 +183,7 @@ func getAgentSecret() *v1.Secret {
 	return &secret
 }
 
-func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
+func createSecret(cs *k8s, request AgentRequest, m *v1.Pod) *v1.Secret {
 	secret := getAgentSecret()
 
 	log.Println("parsing secret data from agent request")
@@ -179,7 +193,7 @@ func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
 	if request.AgentId != "" {
 		// Set the agentId as label of the secret if specified
 		secret.SetLabels(map[string]string{
-			agentIdLabel: request.AgentId,
+			AgentLabel: request.AgentId,
 		})
 	}
 
@@ -187,6 +201,9 @@ func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
 	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
 	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
 	secret.Data[".agentVersion"] = ([]byte(request.AgentConfiguration.AgentVersion))
+
+	AddOwnerRefToObject(secret, AsOwner(m))
+	log.Println("WebServer pod added as Owner reference to secret")
 
 	secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
 	secret2, err := secretClient.Create(secret)
@@ -215,4 +232,24 @@ func getFailureResponse(response AgentProvisionResponse, err error) AgentProvisi
 	response.ResponseType = "fail"
 	response.ErrorMessage = err.Error()
 	return response
+}
+
+func GenerateLabelsForPod(agentId string) map[string]string {
+	return map[string]string{AgentLabel: agentId}
+}
+
+func AddOwnerRefToObject(obj metav1.Object, ownerRef metav1.OwnerReference) {
+	obj.SetOwnerReferences(append(obj.GetOwnerReferences(), ownerRef))
+}
+
+// asOwner returns an OwnerReference set as the memcached CR
+func AsOwner(m *v1.Pod) metav1.OwnerReference {
+	falseVar := false
+	return metav1.OwnerReference{
+		APIVersion: "apps/v1",
+		Kind:       "Pod",
+		Name:       m.Name,
+		UID:        m.UID,
+		Controller: &falseVar,
+	}
 }
