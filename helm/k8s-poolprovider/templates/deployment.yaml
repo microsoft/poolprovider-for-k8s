@@ -17,6 +17,8 @@ spec:
         name: {{ .Values.app.name }}
         command: ["/app/main"]
         env:
+        - name: POD_NAMESPACE
+          value: {{ .Values.app.namespace}}
         - name: VSTS_SECRET
           valueFrom:
             secretKeyRef:

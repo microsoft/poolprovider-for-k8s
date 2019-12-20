@@ -63,6 +63,8 @@ spec:
         name: k8s-poolprovider
         command: ["/app/main"]
         env:
+        - name: POD_NAMESPACE
+          value: azuredevops
         - name: VSTS_SECRET
           valueFrom:
             secretKeyRef:
@@ -70,50 +72,3 @@ spec:
               key: VSTS_SECRET
         ports:
         - containerPort: 8080
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: k8s-poolprovider
-  namespace: azuredevops
-  labels:
-    app: k8s-poolprovider
-spec:
-  backend:
-    serviceName: azure-pipelines-pool
-    servicePort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8s-poolprovider-redis
-  namespace: azuredevops
-  labels:
-    app: k8s-poolprovider
-spec:
-  ports:
-    - port: 6379
-  selector:
-    app: k8s-poolprovider
-    tier: redis
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: k8s-poolprovider-redis
-  namespace: azuredevops
-  labels:
-    app: k8s-poolprovider
-spec:
-  template:
-    metadata:
-      labels:
-        app: k8s-poolprovider
-        tier: redis
-    spec:
-      containers:
-      - image: redis:3-alpine
-        name: redis
-        ports:
-        - containerPort: 6379
-          name: redis

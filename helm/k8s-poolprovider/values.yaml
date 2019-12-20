@@ -14,7 +14,7 @@ rbac:
 
 image:
   repository: prebansa/k8s-poolprovider
-  tag: v1.24s
+  tag: v1.25s
   pullPolicy: IfNotPresent
 
 vsts:

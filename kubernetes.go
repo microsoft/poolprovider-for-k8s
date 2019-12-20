@@ -5,8 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"log"
+
 	"github.com/ghodss/yaml"
-    "log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -25,7 +26,8 @@ type k8s struct {
 const agentIdLabel = "AgentId"
 
 // Creates a Pod with the default image specification. The pod is labelled with the agentId passed to it.
-func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
+func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionResponse {
+
 	cs := CreateClientSet()
 
 	log.Println("Starting pod creation")
@@ -48,7 +50,7 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(secret.Name))
 	log.Println("secrets mounted as volume")
 
-	podClient := cs.clientset.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods(podnamespace)
 
 	_, err2 := podClient.Create(pod)
 	if err2 != nil {
@@ -62,16 +64,16 @@ func CreatePod(agentRequest AgentRequest) AgentProvisionResponse {
 	return response
 }
 
-func GetBuildKitPod(key string) PodResponse {
+func GetBuildKitPod(key string, podnamespace string) PodResponse {
 	cs := CreateClientSet()
 
 	var response PodResponse
 
 	listOptions := metav1.ListOptions{
-        LabelSelector: "role=buildkit",
-    }
+		LabelSelector: "role=buildkit",
+	}
 
-	podClient := cs.clientset.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods(podnamespace)
 	podlist, err2 := podClient.List(listOptions)
 	if err2 != nil {
 		return getFailure(response, err2)
@@ -85,28 +87,28 @@ func GetBuildKitPod(key string) PodResponse {
 			nodes = append(nodes, s)
 		}
 	}
-	
+
 	log.Println("Fetching the target pod using consistent hash")
-	chosen:= ComputeConsistentHash(nodes, key)
+	chosen := ComputeConsistentHash(nodes, key)
 	response.Status = "success"
 	response.Message = chosen
 	return response
 }
 
-func DeletePodWithAgentId(agentId string) PodResponse {
+func DeletePodWithAgentId(agentId string, podnamespace string) PodResponse {
 	cs := CreateClientSet()
 	var response PodResponse
 
-	podClient := cs.clientset.CoreV1().Pods("azuredevops")
+	podClient := cs.clientset.CoreV1().Pods(podnamespace)
 
-    secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
-	
+	secretClient := cs.clientset.CoreV1().Secrets(podnamespace)
+
 	// Get the secret with this agentId
 	secrets, _ := secretClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if secrets == nil || len(secrets.Items) == 0 {
 		return getFailure(response, errors.New("Could not find secret with AgentId "+agentId))
 	}
-	
+
 	// Get the pod with this agentId
 	pods, _ := podClient.List(metav1.ListOptions{LabelSelector: agentIdLabel + "=" + agentId})
 	if pods == nil || len(pods.Items) == 0 {
@@ -126,14 +128,14 @@ func DeletePodWithAgentId(agentId string) PodResponse {
 	log.Println("Delete agent pod done")
 
 	response.Status = "success"
-	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret "+ secrets.Items[0].GetName()
+	response.Message = "Deleted " + pods.Items[0].GetName() + " and secret " + secrets.Items[0].GetName()
 	return response
 }
 
 func getAgentSpecification(agentId string, agentVersion string) (*v1.Pod, error) {
 	// Defaulting to use the DIND image, the podname can be exposed as a parameter and the user can then select which
 	// image will be used to create the agent.
-	podname := "agent-lean-dind"
+	podname := "azure-pipelines-agent"
 
 	// If pod is to be created in a different namespace
 	// then secrets need to be created in the same namespace, i.e. VSTS_TOKEN and VSTS_ACCOUNT
@@ -188,7 +190,7 @@ func createSecret(cs *k8s, request AgentRequest) *v1.Secret {
 	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
 	secret.Data[".agentVersion"] = ([]byte(request.AgentConfiguration.AgentVersion))
 
-	secretClient := cs.clientset.CoreV1().Secrets("azuredevops")
+	secretClient := cs.clientset.CoreV1().Secrets(podnamespace)
 	secret2, err := secretClient.Create(secret)
 
 	if err != nil {
