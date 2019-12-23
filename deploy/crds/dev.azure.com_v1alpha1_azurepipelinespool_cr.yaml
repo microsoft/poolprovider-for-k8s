@@ -1,0 +1,39 @@
+apiVersion: dev.azure.com/v1alpha1
+kind: AzurePipelinesPool
+metadata:
+  name: azurepipelinespool-operator
+  namespace: azuredevops
+spec:
+  controllerImage: prebansa/k8s-poolprovider:v2.1
+  buildkitReplicas: 1
+  agentPools:
+  - name: windows
+    spec:
+      containers:
+      - name: vsts-agent
+        image: prebansa/myagent:v5.17
+        env:
+        - name: RUNNING_ON
+          valueFrom:
+            configMapKeyRef:
+              name: kubernetes-config
+              key: type
+        volumeMounts:
+        - name: agent-creds
+          mountPath: "/vsts/agent"
+          readOnly: true
+  - name: linux
+    spec:
+      containers:
+      - name: vsts-agent
+        image: prebansa/myagent:v5.16
+        env:
+        - name: RUNNING_ON
+          valueFrom:
+            configMapKeyRef:
+              name: kubernetes-config
+              key: type
+        volumeMounts:
+        - name: agent-creds
+          mountPath: "/vsts/agent"
+          readOnly: true
