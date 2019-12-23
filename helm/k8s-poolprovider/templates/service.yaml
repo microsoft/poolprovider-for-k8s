@@ -12,15 +12,3 @@ spec:
   selector:
     app: {{ .Values.app.name }}
     tier: frontend
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: {{ .Values.app.name }}
-  namespace: {{ .Values.app.namespace }}
-  labels:
-    app: {{ .Values.app.name }}
-spec:
-  backend:
-    serviceName: {{ .Values.app.name }}
-    servicePort: 8080

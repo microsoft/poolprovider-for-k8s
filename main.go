@@ -6,14 +6,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
+var podnamespace = "azuredevops"
+
 func main() {
-	// Create Redis storage
-	// storage := NewRedisStorage("k8s-poolprovider-redis:6379")
 
 	// Define HTTP endpoints
 	s := http.NewServeMux()
+
+	podnamespace = os.Getenv("POD_NAMESPACE")
+
 	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
@@ -40,7 +44,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 				writeJsonResponse(resp, http.StatusBadRequest, GetError(NoAgentIdError))
 			} else {
 				log.Println("Calling create pod")
-				var pods = CreatePod(agentRequest)
+				var pods = CreatePod(agentRequest, podnamespace)
 				writeJsonResponse(resp, http.StatusCreated, pods)
 			}
 		} else {
@@ -65,7 +69,7 @@ func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 				writeJsonResponse(resp, http.StatusBadRequest, GetError(NoAgentIdError))
 			} else {
 				log.Println("Calling delete pod")
-				var pods = DeletePodWithAgentId(agentRequest.AgentId)
+				var pods = DeletePodWithAgentId(agentRequest.AgentId, podnamespace)
 				writeJsonResponse(resp, http.StatusCreated, pods)
 			}
 		} else {
@@ -88,7 +92,7 @@ func GetBuildPodHandler(resp http.ResponseWriter, req *http.Request) {
 		keyHeader := "key"
 		headerVal := req.Header.Get(keyHeader)
 		log.Println("Calling getbuildkit pod")
-		var pods = GetBuildKitPod(headerVal)
+		var pods = GetBuildKitPod(headerVal, podnamespace)
 		writeJsonResponse(resp, http.StatusCreated, pods)
 	} else {
 		writeJsonResponse(resp, http.StatusMethodNotAllowed, GetError(InvalidRequestError))
