@@ -9,7 +9,7 @@ trigger:
 variables:
   poolname: '$(Build.BuildId)'
   URI: 'https://dev.azure.com/bansalpreeti1'
-  projectname: 'test2'
+  projectname: 'k8'
   sharedSecret: 'sharedsecret1234'
   targetSize: '1'
 
