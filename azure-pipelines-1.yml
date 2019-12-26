@@ -240,6 +240,6 @@ stages:
         inputs:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processop'
-          kubernetesCluster: 'testpool2'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop'
           command: 'ls'
