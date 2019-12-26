@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubernetes-config
-  namespace: {{ .Values.app.namespace }}
-data:
-  type: KUBERNETES

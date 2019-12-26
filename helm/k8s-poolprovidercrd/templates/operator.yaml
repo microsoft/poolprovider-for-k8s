@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8s-poolprovider
-  namespace: azuredevops
+  namespace: {{ .Values.app.namespace }}
 spec:
   replicas: 1
   selector:

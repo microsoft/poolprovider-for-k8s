@@ -3,7 +3,7 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: k8s-poolprovider
-  namespace: azuredevops
+  namespace: {{ .Values.app.namespace }}
 rules:
 - apiGroups:
   - ""
@@ -70,3 +70,22 @@ rules:
   - patch
   - update
   - watch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-poolprovider
+  namespace: {{ .Values.app.namespace }}
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8s-poolprovider
+  namespace: {{ .Values.app.namespace }}
+subjects:
+- kind: ServiceAccount
+  name: k8s-poolprovider
+roleRef:
+  kind: Role
+  name: k8s-poolprovider
+  apiGroup: rbac.authorization.k8s.io
