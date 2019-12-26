@@ -237,7 +237,6 @@ func AddOwnerRefToObject(obj metav1.Object, ownerRef metav1.OwnerReference) {
 	obj.SetOwnerReferences(append(obj.GetOwnerReferences(), ownerRef))
 }
 
-// asOwner returns an OwnerReference set as the memcached CR
 func AsOwner(m *v1.Pod) metav1.OwnerReference {
 	falseVar := false
 	return metav1.OwnerReference{

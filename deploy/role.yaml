@@ -13,7 +13,6 @@ rules:
   - services/finalizers
   - endpoints
   - persistentvolumeclaims
-  - events
   - configmaps
   - secrets
   verbs:
@@ -28,7 +27,6 @@ rules:
   - apps
   resources:
   - deployments
-  - daemonsets
   - replicasets
   - statefulsets
   verbs:
