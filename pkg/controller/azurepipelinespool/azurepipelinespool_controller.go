@@ -458,7 +458,7 @@ func AddnewServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
   return &corev1.Service {
 	  ObjectMeta: metav1.ObjectMeta {
 		  Namespace: cr.Namespace,
-		  Name:      "azurepipelinespoolservice",
+		  Name:      "azure-pipelines-pool",
 		  Labels:    labels,
 	  },
 	  Spec: corev1.ServiceSpec {
