@@ -36,7 +36,6 @@ stages:
           command: 'init'
           upgradeTiller: false
           waitForExecution: false
-          arguments: '--service-account tiller'
 
       - task: HelmDeploy@0
         inputs:
