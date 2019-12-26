@@ -80,3 +80,12 @@ func CreateClientSet() *k8s {
 	}
 	return &client
 }
+
+func isTestingEnv() bool {
+	testingMode := os.Getenv("COUNTTEST")
+	
+	if testingMode == "1" || testingMode == "2" {
+		return true
+	}
+	return false
+}

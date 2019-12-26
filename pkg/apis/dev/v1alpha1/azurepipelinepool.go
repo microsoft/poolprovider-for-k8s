@@ -10,18 +10,19 @@ import (
 
 func (c *AzurePipelinesPoolV1Alpha1Client) AzurePipelinesPool(namespace string) AzurePipelinesPoolInterface {
 	return &AzurePipelinesPoolclient{
-		client: c.restClient,
+		client: c.RestClient,
 		ns:     namespace,
 	}
 }
 
 type AzurePipelinesPoolV1Alpha1Client struct {
-	restClient rest.Interface
+	RestClient rest.Interface
 }
 
 type AzurePipelinesPoolInterface interface {
 	Get(name string) (*AzurePipelinesPool, error)
 	AddNewPodForCR(obj *AzurePipelinesPool, agentId string, labels map[string]string, poolName string) *v1.Pod
+	AddNewPodForCRTest(obj *AzurePipelinesPool, agentId string, labels map[string]string, poolName string) *v1.Pod
 }
 
 type AzurePipelinesPoolclient struct {
@@ -33,7 +34,7 @@ func (c *AzurePipelinesPoolclient) Get(name string) (*AzurePipelinesPool, error)
 	log.Println("Came insidde get method")
 	result := &AzurePipelinesPool{}
 	err := c.client.Get().
-		Namespace(c.ns).Resource("azurepipelinespool").
+		Namespace(c.ns).Resource("azurepipelinespools").
 		Name(name).Do().Into(result)
 	return result, err
 }
@@ -42,6 +43,7 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, agent
 
 	spec := FetchPodSpec(obj, poolname)
 
+	if spec != nil {
 	dep := &v1.Pod{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Labels:       labels,
@@ -50,6 +52,27 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, agent
 		Spec: *spec,
 	}
 
+	return dep
+   }
+   return nil
+}
+
+func (c *AzurePipelinesPoolclient) AddNewPodForCRTest(obj *AzurePipelinesPool, agentId string, labels map[string]string, poolname string) *v1.Pod {
+
+	dep := &v1.Pod{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Labels:       labels,
+			GenerateName: "azure-pipelines-agent-",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container {
+				{
+					Name:   "vsts-agent",
+					Image:  "prebansa/myagent:v1",
+				},
+			},
+		},
+	}
 	return dep
 }
 

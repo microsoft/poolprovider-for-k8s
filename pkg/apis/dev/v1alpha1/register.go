@@ -25,6 +25,8 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
+var testingclient AzurePipelinesPoolV1Alpha1Client
+
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&AzurePipelinesPool{},
@@ -51,5 +53,29 @@ func NewClient(cfg *rest.Config) (*AzurePipelinesPoolV1Alpha1Client, error) {
 		return nil, err
 	}
 	log.Println("rest client inside newclient", client)
-	return &AzurePipelinesPoolV1Alpha1Client{restClient: client}, nil
+	return &AzurePipelinesPoolV1Alpha1Client{RestClient: client}, nil
+}
+
+func NewClientTest() (*AzurePipelinesPoolV1Alpha1Client, error) {
+	/*scheme := runtime.NewScheme()
+	SchemeBuilder := runtime.NewSchemeBuilder(addKnownTypes)
+	if err := SchemeBuilder.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	client, err := rest.RESTClientFor(&rest.Config{APIPath: "/apis", ContentConfig: rest.ContentConfig{GroupVersion: &SchemeGroupVersion, NegotiatedSerializer: serializer.NewCodecFactory(scheme)}})
+	if err != nil {
+		return nil, err
+	}
+	log.Println("rest client inside newclient", client)*/
+	return &testingclient, nil
+}
+
+func SetClient(s *runtime.Scheme ) {
+	client, err := rest.RESTClientFor(&rest.Config{APIPath: "/apis", ContentConfig: rest.ContentConfig{GroupVersion: &SchemeGroupVersion, NegotiatedSerializer: serializer.NewCodecFactory(s)}})
+	if err != nil {
+		
+	}
+	log.Println("rest client inside newclient", client)
+	testingclient.RestClient = client
+	//testingclient.RestClient =  s
 }

@@ -10,7 +10,7 @@ rules:
 - apiGroups:
   - dev.azure.com
   resources:
-  - azurepipelinespool
+  - azurepipelinespools
   verbs:
   - get
   - list

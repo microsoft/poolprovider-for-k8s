@@ -36,7 +36,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAzurePipelinesPool{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileAzurePipelinesPool{Client: mgr.GetClient(), Scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -96,8 +96,8 @@ var _ reconcile.Reconciler = &ReconcileAzurePipelinesPool{}
 type ReconcileAzurePipelinesPool struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	Client client.Client
+	Scheme *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a AzurePipelinesPool object and makes changes based on the state read
@@ -113,7 +113,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 
 	// Fetch the AzurePipelinesPool instance
 	instance := &devv1alpha1.AzurePipelinesPool{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	err := r.Client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -126,7 +126,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	if ok := IsInitialized(instance); !ok {
-		err := r.client.Update(context.TODO(), instance)
+		err := r.Client.Update(context.TODO(), instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)
 		}
@@ -140,7 +140,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		manageCleanUpLogic(instance)
 		
 		removeFinalizer(instance, controllerName)
-		err = r.client.Update(context.TODO(), instance)
+		err = r.Client.Update(context.TODO(), instance)
 		if err != nil {
 			log.Error(err,"unable to update instance")
 		}
@@ -148,19 +148,19 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	// Define a new Pod object
-	pod := newPodForCR(instance)
+	pod := AddnewPodForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, pod, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if this Pod already exists
 	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+		err = r.Client.Create(context.TODO(), pod)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -175,19 +175,19 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 
     // Define a new ConfigMapobject
-	configMap := newConfigMapForCR(instance)
+	configMap := AddnewConfigMapForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, configMap, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, configMap, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if this ConfigMap already exists
 	found1 := &corev1.ConfigMap{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, found1)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, found1)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ConfigMap", "ConfigMap.Namespace", configMap.Namespace, "ConfigMap.Name", configMap.Name)
-		err = r.client.Create(context.TODO(), configMap)
+		err = r.Client.Create(context.TODO(), configMap)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -201,18 +201,18 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	// ConfigMap already exists - don't requeue
 	reqLogger.Info("Skip reconcile: ConfigMap already exists", "ConfigMap.Namespace", found1.Namespace, "ConfigMap.Name", found1.Name)
 
-	service := newServiceForCR(instance)
+	service := AddnewServiceForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, service, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, service, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	found2 := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found2)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found2)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Service", "Service.Namespace", service.Namespace, "Service.Name", service.Name)
-		err = r.client.Create(context.TODO(), service)
+		err = r.Client.Create(context.TODO(), service)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -224,18 +224,18 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 
 	reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", found2.Namespace, "Service.Name", found2.Name)
 
-	buildkitPod := newBuildkitPodForCR(instance)
+	buildkitPod := AddnewBuildkitPodForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, buildkitPod, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, buildkitPod, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	found3 := &appsv1.StatefulSet{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: buildkitPod.Name, Namespace: buildkitPod.Namespace}, found3)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitPod.Name, Namespace: buildkitPod.Namespace}, found3)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Buildkit Pod", "BuildKitPod.Namespace", buildkitPod.Namespace, "BuildKitPod.Name", buildkitPod.Name)
-		err = r.client.Create(context.TODO(), buildkitPod)
+		err = r.Client.Create(context.TODO(), buildkitPod)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -247,18 +247,18 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 
 	reqLogger.Info("Skip reconcile: Buildkit pod already exists", "BuildkitPod.Namespace", found3.Namespace, "BuildKitPod.Name", found3.Name)
 
-	buildkitService := newBuildkitServiceForCR(instance)
+	buildkitService := AddnewBuildkitServiceForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, buildkitService, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, buildkitService, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	found4 := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: buildkitService.Name, Namespace: buildkitService.Namespace}, found4)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitService.Name, Namespace: buildkitService.Namespace}, found4)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Buildkit Service", "BuildKitService.Namespace", buildkitService.Namespace, "BuildKitService.Name", buildkitService.Name)
-		err = r.client.Create(context.TODO(), buildkitService)
+		err = r.Client.Create(context.TODO(), buildkitService)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -321,7 +321,7 @@ func manageCleanUpLogic(cr *devv1alpha1.AzurePipelinesPool) error{
   return nil
 }
 
-func newPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
+func AddnewPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
   labels := map[string]string{
 	  "app": cr.Name,
 	  "tier":"frontend",
@@ -363,7 +363,7 @@ func newPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
   }
 }
 
-func newBuildkitPodForCR(cr *devv1alpha1.AzurePipelinesPool) *appsv1.StatefulSet {
+func AddnewBuildkitPodForCR(cr *devv1alpha1.AzurePipelinesPool) *appsv1.StatefulSet {
   labels := map[string]string {
 	  "app": cr.Name,
   }
@@ -416,7 +416,7 @@ func newBuildkitPodForCR(cr *devv1alpha1.AzurePipelinesPool) *appsv1.StatefulSet
   }
 }
 
-func newBuildkitServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
+func AddnewBuildkitServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
 	 labels := map[string]string {
 	  "app": cr.Name,
   }
@@ -438,7 +438,7 @@ func newBuildkitServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service
   }
 }
 
-func newConfigMapForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.ConfigMap {
+func AddnewConfigMapForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.ConfigMap {
   return &corev1.ConfigMap {
 	  ObjectMeta: metav1.ObjectMeta {
 		  Name:      "kubernetes-config",
@@ -450,7 +450,7 @@ func newConfigMapForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.ConfigMap {
   }
 }
 
-func newServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
+func AddnewServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
   labels := map[string]string {
 	  "app": cr.Name,
 	  "tier":"frontend",
