@@ -218,15 +218,15 @@ stages:
         inputs:
           helmVersionToInstall: 'latest'
 
-      - task: AzureCLI@2
+      - task: AzureCLI@1
         inputs:
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          scriptType: 'ps'
           scriptLocation: 'inlineScript'
           inlineScript: |
             az aks get-credentials --name testop --resource-group processmonitor-rg
             
             kubectl delete azurepipelinespool azurepipelinespool-operator -n azuredevops
+
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
