@@ -47,7 +47,7 @@ stages:
           chartType: 'FilePath'
           chartPath: 'helm/k8s-poolprovidercrd'
           releaseName: 'release-$(Build.BuildId)'
-          overrideValues: '"vsts.VSTS_SECRET=$(sharedSecret)"'
+          overrideValues: 'vsts.VSTS_SECRET=$(sharedSecret)'
           valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
           waitForExecution: false
 
