@@ -46,10 +46,10 @@ stages:
           command: 'install'
           chartType: 'FilePath'
           chartPath: 'helm/k8s-poolprovidercrd'
-          releaseName: 'release-$(Build.BuildId)'
           overrideValues: 'vsts.VSTS_SECRET=$(sharedSecret)'
           valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
           waitForExecution: false
+          arguments: 'release-$(Build.BuildId)'
 
       - task: Kubernetes@1
         inputs:
