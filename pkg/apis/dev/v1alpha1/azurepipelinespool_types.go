@@ -21,13 +21,6 @@ type AgentPoolSpec struct {
 	PoolSpec *corev1.PodSpec `json:"spec"`
 }
 
-// AzurePipelinesPoolStatus defines the observed state of AzurePipelinesPool
-type AzurePipelinesPoolStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AzurePipelinesPool is the Schema for the azurepipelinespools API
@@ -38,7 +31,6 @@ type AzurePipelinesPool struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   AzurePipelinesPoolSpec   `json:"spec,omitempty"`
-	Status AzurePipelinesPoolStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
