@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	//"strings"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -17,7 +16,6 @@ const testnamespace = "azuredevops"
 func TestCreatePod(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	//SetTestingEnvironmentVariables()
 	SetupCustomResource()
 
 	testPod := CreatePod(agentrequest, testnamespace)
