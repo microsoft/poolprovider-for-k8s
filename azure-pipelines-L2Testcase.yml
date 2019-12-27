@@ -26,31 +26,39 @@ stages:
     steps:
       - task: HelmInstaller@1
         inputs:
-          helmVersionToInstall: '2.15.0-rc.1'
+          helmVersionToInstall: 'latest'
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testpool2'
+          kubernetesCluster: 'testop'
           command: 'init'
           upgradeTiller: false
           waitForExecution: false
-          arguments: '--service-account tiller'
 
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testpool2'
+          kubernetesCluster: 'testop'
           command: 'install'
           chartType: 'FilePath'
-          chartPath: 'helm/k8s-poolprovider'
-          releaseName: 'release-$(Build.BuildId)'
-          overrideValues: '"vsts.VSTS_SECRET=$(sharedSecret)"'
-          valueFile: 'helm/k8s-poolprovider/values.yaml'
+          chartPath: 'helm/k8s-poolprovidercrd'
+          overrideValues: 'vsts.VSTS_SECRET=$(sharedSecret)'
+          valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
           waitForExecution: false
+          arguments: 'release-$(Build.BuildId)'
+
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop'
+          command: 'apply'
+          arguments: '-f helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml'
 
       - task: Bash@3
         inputs:
@@ -66,7 +74,7 @@ stages:
         inputs:
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           scriptLocation: 'inlineScript'
-          inlineScript: 'az aks get-credentials --name testpool2 --resource-group processmonitor-rg'
+          inlineScript: 'az aks get-credentials --name testop --resource-group processmonitor-rg'
        
       - task: PowerShell@2
         inputs:
@@ -138,7 +146,7 @@ stages:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testpool2'
+          kubernetesCluster: 'testop'
           command: 'ls'
   
 - stage: Connect_with_agent_created_in_first_stage 
@@ -208,13 +216,23 @@ stages:
 
       - task: HelmInstaller@1
         inputs:
-          helmVersionToInstall: '2.15.0-rc.1'
+          helmVersionToInstall: 'latest'
+
+      - task: AzureCLI@1
+        inputs:
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az aks get-credentials --name testop --resource-group processmonitor-rg
+            
+            kubectl delete azurepipelinespool azurepipelinespool-operator -n azuredevops
+
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testpool2'
+          kubernetesCluster: 'testop'
           command: 'delete'
           arguments: 'release-$(Build.BuildId)'
 
@@ -223,5 +241,5 @@ stages:
           connectionType: 'Azure Resource Manager'
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testpool2'
+          kubernetesCluster: 'testop'
           command: 'ls'
