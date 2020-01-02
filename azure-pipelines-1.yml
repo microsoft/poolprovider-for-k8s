@@ -25,15 +25,10 @@ stages:
 
     steps:
       
-      - task: Kubernetes@1
+      - task: kubectlgeneral@3
         inputs:
-          connectionType: 'Kubernetes Service Connection'
-          kubernetesServiceEndpoint: 'testl2'
-          command: 'get'
-          arguments: 'pods'
-          secretType: 'dockerRegistry'
-          containerRegistryType: 'Azure Container Registry'
-
+          k8sService: 'testl2'
+          subCommand: 'get pods'
       - task: HelmInstaller@1
         inputs:
           helmVersionToInstall: 'latest'
