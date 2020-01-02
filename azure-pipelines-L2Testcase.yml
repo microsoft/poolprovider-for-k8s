@@ -46,7 +46,7 @@ stages:
           command: 'install'
           chartType: 'FilePath'
           chartPath: 'helm/k8s-poolprovidercrd'
-          overrideValues: 'vsts.VSTS_SECRET=$(sharedSecret)'
+          overrideValues: 'azurepipelines.VSTS_SECRET=$(sharedSecret)'
           valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
           waitForExecution: false
           arguments: 'release-$(Build.BuildId)'
