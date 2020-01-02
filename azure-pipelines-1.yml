@@ -44,6 +44,6 @@ stages:
           connectionType: 'Kubernetes Service Connection'
           kubernetesServiceEndpoint: 'test1'
           command: 'delete'
-          arguments: 'azurepipelines azurepipelinespool-operator -n azuredevops'
+          arguments: 'azurepipelinespool azurepipelinespool-operator -n azuredevops'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
