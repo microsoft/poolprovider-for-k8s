@@ -25,11 +25,7 @@ stages:
 
     steps:
       
-      - task: kubectlgeneral@3
-        inputs:
-          k8sService: 'testl2'
-          subCommand: 'get pods'
-          
+
       - task: HelmInstaller@1
         inputs:
           helmVersionToInstall: 'latest'
