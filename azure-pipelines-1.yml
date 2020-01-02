@@ -43,3 +43,11 @@ stages:
           k8sService: 'test1'
           subCommand: 'get pods'
           
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: 'test1'
+          command: 'delete'
+          arguments: 'azurepipelines azurepipelinespool-operator -n azuredevops'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
