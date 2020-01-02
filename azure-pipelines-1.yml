@@ -14,166 +14,6 @@ variables:
   targetSize: '1'
 
 stages:
-- stage: Deploy_Pool_Provider_Agent
-  jobs:
-
-  ################################################################################
-  - job: Configure_poolprovider
-  ################################################################################
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-      - task: HelmInstaller@1
-        inputs:
-          helmVersionToInstall: 'latest'
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'init'
-          upgradeTiller: false
-          waitForExecution: false
-
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'install'
-          chartType: 'FilePath'
-          chartPath: 'helm/k8s-poolprovidercrd'
-          overrideValues: 'vsts.VSTS_SECRET=$(sharedSecret)'
-          valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
-          waitForExecution: false
-          arguments: 'release-$(Build.BuildId)'
-
-      - task: Kubernetes@1
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscriptionEndpoint: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'apply'
-          arguments: '-f helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml'
-
-      - task: Bash@3
-        inputs:
-          targetType: 'inline'
-          script: |
-            # Write your commands here
-            
-            echo 'Sleep for 10 sec'
-            
-            sleep 10
-
-      - task: AzureCLI@1
-        inputs:
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          scriptLocation: 'inlineScript'
-          inlineScript: 'az aks get-credentials --name testop --resource-group processmonitor-rg'
-       
-      - task: PowerShell@2
-        inputs:
-          targetType: 'inline'
-          script: |
-            Write-Host "Executing powershell script"
-                     
-                        $ip=$(kubectl get service azure-pipelines-pool -n azuredevops -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
-                     
-                        echo $ip
-                     
-                        $body = @{
-                           "name"="$(poolname)"
-                           "type"="Ignore"
-                           "acquireAgentEndpoint"="http://$($ip):8080/acquire"
-                           "releaseAgentEndpoint"="http://$($ip):8080/release"
-                           "getAgentDefinitionEndpoint"="http://$($ip):8080/definitions"
-                           "getAgentRequestStatusEndpoint"="http://$($ip):8080/definitions"
-                           "sharedSecret"="$(sharedSecret)"
-                         } | ConvertTo-Json
-                     
-                        $header = @{
-                          "Accept"="application/json"
-                          "Authorization"="Basic OmprbGFnNXFoaWR4djRxcGc1dGJoMnZoa3RvdXFhaGlseG5meHhscW15dDd3cTRreHRkemE="
-                          "Content-Type"="application/json"
-                         } 
-                     
-                        $response = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/agentclouds?api-version=5.0-preview" -Method 'Post' -Body $body -Headers $header
-                        
-                        Write-Host $response
-                     
-                        $jsonObj = ConvertFrom-Json $([String]::new($response.Content))
-                     
-                        Write-Host $jsonObj.agentCloudId
-                     
-                        $body1 = @{
-                           "name"="$(poolname)"
-                           "agentCloudId"=$jsonObj.agentCloudId
-                           "targetSize"=$(targetSize)
-                         } | ConvertTo-Json
-                     
-                         $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
-                         Write-Host $response1
-                         $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
-                         $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
-                    
-                         Write-Host $response2
-                    
-                         $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
-                    
-                         $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
-                    
-                         Write-Host "QueueId is ". $queueId
-                    
-                        $body3 = @()
-                        $body3 += [pscustomobject]@{
-                          "authorized"="true"
-                          "id"="$queueId"
-                          "name"="$(Build.BuildId)"
-                          "type"="queue"   
-                        }
-                        
-                        $here1 = ConvertTo-Json -InputObject @( $body3 )
-                        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $here1 -Headers $header
-                    
-                        Write-Host $response4       
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'ls'
-  
-- stage: Connect_with_agent_created_in_first_stage 
-  jobs:
-
-  ################################################################################
-  - job: Connect_with_agent
-  ################################################################################
-    pool:
-      name: '$(Build.BuildId)'
-
-    steps:
-      - task: Bash@3
-        inputs:
-          targetType: 'inline'
-          script: |
-            # Write your commands here
-          
-            echo 'Hello world in agent'
-            which buildctl
-
-      - task: ContainerBuild@0
-        inputs:
-          #dockerRegistryServiceConnection: 'dock1'
-          repository: 'prebansa/testbuildctl'
-          Dockerfile: 'Dockerfile'
-      
 - stage: Cleanup_test_rsources 
   jobs:
 
@@ -203,7 +43,7 @@ stages:
         
              $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
         
-             $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
+             $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq 1115}).id
         
              Write-Host "QueueId is ". $queueId
              $url = "$(URI)/$(projectname)/_apis/distributedtask/queues/$($queueId)?api-version=5.0-preview"
@@ -232,7 +72,7 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop'
           command: 'delete'
-          arguments: 'release-$(Build.BuildId)'
+          arguments: 'release-1115'
 
       - task: HelmDeploy@0
         inputs:
