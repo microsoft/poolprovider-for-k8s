@@ -30,8 +30,8 @@ stages:
           connectionType: 'Kubernetes Service Connection'
           kubernetesServiceEndpoint: 'testl2'
           namespace: 'default'
-          command: 'delete'
-          arguments: 'azurepipelinespool azurepipelinespool-operator'
+          command: 'get'
+          arguments: 'pods'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
 
