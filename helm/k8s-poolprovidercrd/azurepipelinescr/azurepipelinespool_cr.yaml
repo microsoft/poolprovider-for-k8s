@@ -18,10 +18,6 @@ spec:
             configMapKeyRef:
               name: kubernetes-config
               key: type
-        volumeMounts:
-        - name: agent-creds
-          mountPath: "/vsts/agent"
-          readOnly: true
   - name: linux
     spec:
       containers:
@@ -33,7 +29,3 @@ spec:
             configMapKeyRef:
               name: kubernetes-config
               key: type
-        volumeMounts:
-        - name: agent-creds
-          mountPath: "/vsts/agent"
-          readOnly: true

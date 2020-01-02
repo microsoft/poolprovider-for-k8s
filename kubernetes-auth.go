@@ -1,13 +1,13 @@
-package main 
+package main
 
 import (
-	"path/filepath"
 	"os"
+	"path/filepath"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 var client k8s
@@ -65,26 +65,24 @@ func homeDir() string {
 }
 
 func CreateClientSet() *k8s {
-	
-	//client = k8s{}
+
 	testingMode := os.Getenv("COUNTTEST")
-	
-	if testingMode == "1" || testingMode == "2" {
-		if testingMode == "1" {
+
+	if testingMode == "1" {
+		if client.clientset == nil {
 			client.clientset = fake.NewSimpleClientset()
-			os.Setenv("COUNTTEST","2")
 		}
 	} else {
-	  	cs, _ := GetClientSet()
-	  	client.clientset = cs
+		cs, _ := GetClientSet()
+		client.clientset = cs
 	}
 	return &client
 }
 
 func isTestingEnv() bool {
 	testingMode := os.Getenv("COUNTTEST")
-	
-	if testingMode == "1" || testingMode == "2" {
+
+	if testingMode == "1" {
 		return true
 	}
 	return false

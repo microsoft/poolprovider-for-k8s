@@ -44,6 +44,7 @@ trap 'cleanup; exit 130' INT
 trap 'cleanup; exit 143' TERM
 
 echo "Mounting the .agent and .credentials files from a different source"
+# /azurepipelines/agent is the default path change below lines if something else is set as mount path in CRD.
 ln -fs /vsts/agent/.agent /azp/$AGENT_FOLDER/.agent
 ln -fs /vsts/agent/.credentials /azp/$AGENT_FOLDER/.credentials
 

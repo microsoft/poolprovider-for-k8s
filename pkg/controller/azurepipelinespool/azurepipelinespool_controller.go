@@ -4,8 +4,8 @@ import (
 	"context"
 
 	devv1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,12 +21,8 @@ import (
 )
 
 const controllerName = "finalizer_azurepipelinespool"
-var log = logf.Log.WithName("controller_azurepipelinespool")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
+var log = logf.Log.WithName("controller_azurepipelinespool")
 
 // Add creates a new AzurePipelinesPool Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -61,7 +57,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-    err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &devv1alpha1.AzurePipelinesPool{},
 	})
@@ -69,7 +65,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-    err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &devv1alpha1.AzurePipelinesPool{},
 	})
@@ -77,14 +73,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-    err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &devv1alpha1.AzurePipelinesPool{},
 	})
 	if err != nil {
 		return err
 	}
-
 
 	return nil
 }
@@ -102,9 +97,6 @@ type ReconcileAzurePipelinesPool struct {
 
 // Reconcile reads that state of the cluster for a AzurePipelinesPool object and makes changes based on the state read
 // and what is in the AzurePipelinesPool.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -133,16 +125,16 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, nil
 	}
 
-    if isBeingDeleted(instance) {
+	if isBeingDeleted(instance) {
 		if !hasFinalizer(instance, controllerName) {
 			return reconcile.Result{}, nil
 		}
 		manageCleanUpLogic(instance)
-		
+
 		removeFinalizer(instance, controllerName)
 		err = r.Client.Update(context.TODO(), instance)
 		if err != nil {
-			log.Error(err,"unable to update instance")
+			log.Error(err, "unable to update instance")
 		}
 		return reconcile.Result{}, nil
 	}
@@ -156,8 +148,8 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	foundPod := &corev1.Pod{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, foundPod)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 		err = r.Client.Create(context.TODO(), pod)
@@ -172,9 +164,9 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", foundPod.Namespace, "Pod.Name", foundPod.Name)
 
-    // Define a new ConfigMapobject
+	// Define a new ConfigMapobject
 	configMap := AddnewConfigMapForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
@@ -183,8 +175,8 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	// Check if this ConfigMap already exists
-	found1 := &corev1.ConfigMap{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, found1)
+	foundConfigMap := &corev1.ConfigMap{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, foundConfigMap)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ConfigMap", "ConfigMap.Namespace", configMap.Namespace, "ConfigMap.Name", configMap.Name)
 		err = r.Client.Create(context.TODO(), configMap)
@@ -199,7 +191,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 	}
 
 	// ConfigMap already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ConfigMap already exists", "ConfigMap.Namespace", found1.Namespace, "ConfigMap.Name", found1.Name)
+	reqLogger.Info("Skip reconcile: ConfigMap already exists", "ConfigMap.Namespace", foundConfigMap.Namespace, "ConfigMap.Name", foundConfigMap.Name)
 
 	service := AddnewServiceForCR(instance)
 
@@ -208,8 +200,8 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	found2 := &corev1.Service{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, found2)
+	foundService := &corev1.Service{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, foundService)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Service", "Service.Namespace", service.Namespace, "Service.Name", service.Name)
 		err = r.Client.Create(context.TODO(), service)
@@ -222,7 +214,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", found2.Namespace, "Service.Name", found2.Name)
+	reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", foundService.Namespace, "Service.Name", foundService.Name)
 
 	buildkitPod := AddnewBuildkitPodForCR(instance)
 
@@ -231,8 +223,8 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	found3 := &appsv1.StatefulSet{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitPod.Name, Namespace: buildkitPod.Namespace}, found3)
+	foundStatefuleSet := &appsv1.StatefulSet{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitPod.Name, Namespace: buildkitPod.Namespace}, foundStatefuleSet)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Buildkit Pod", "BuildKitPod.Namespace", buildkitPod.Namespace, "BuildKitPod.Name", buildkitPod.Name)
 		err = r.Client.Create(context.TODO(), buildkitPod)
@@ -245,7 +237,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Buildkit pod already exists", "BuildkitPod.Namespace", found3.Namespace, "BuildKitPod.Name", found3.Name)
+	reqLogger.Info("Skip reconcile: Buildkit pod already exists", "BuildkitPod.Namespace", foundStatefuleSet.Namespace, "BuildKitPod.Name", foundStatefuleSet.Name)
 
 	buildkitService := AddnewBuildkitServiceForCR(instance)
 
@@ -254,8 +246,8 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	found4 := &corev1.Service{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitService.Name, Namespace: buildkitService.Namespace}, found4)
+	foundBuildkitService := &corev1.Service{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: buildkitService.Name, Namespace: buildkitService.Namespace}, foundBuildkitService)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Buildkit Service", "BuildKitService.Namespace", buildkitService.Namespace, "BuildKitService.Name", buildkitService.Name)
 		err = r.Client.Create(context.TODO(), buildkitService)
@@ -268,7 +260,7 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Buildkit Service already exists", "BuildkitService.Namespace", found4.Namespace, "BuildKitService.Name", found4.Name)
+	reqLogger.Info("Skip reconcile: Buildkit Service already exists", "BuildkitService.Namespace", foundBuildkitService.Namespace, "BuildKitService.Name", foundBuildkitService.Name)
 	return reconcile.Result{}, nil
 }
 
@@ -292,183 +284,183 @@ func isBeingDeleted(obj metav1.Object) bool {
 
 func addFinalizer(obj metav1.Object, finalizer string) {
 	if !hasFinalizer(obj, finalizer) {
-		  obj.SetFinalizers(append(obj.GetFinalizers(), finalizer))
+		obj.SetFinalizers(append(obj.GetFinalizers(), finalizer))
 	}
 }
 
 func hasFinalizer(obj metav1.Object, finalizer string) bool {
 	for _, fin := range obj.GetFinalizers() {
-			 if fin == finalizer {
-				  return true
-			 }
+		if fin == finalizer {
+			return true
+		}
 	}
 	return false
 }
 
 func removeFinalizer(obj metav1.Object, finalizer string) {
 	for i, fin := range obj.GetFinalizers() {
-		   if fin == finalizer {
-				 finalizers := obj.GetFinalizers()
-				 finalizers[i] = finalizers[len(finalizers)-1]
-				 obj.SetFinalizers(finalizers[:len(finalizers)-1])
-				 return
-		   }
-	}	
+		if fin == finalizer {
+			finalizers := obj.GetFinalizers()
+			finalizers[i] = finalizers[len(finalizers)-1]
+			obj.SetFinalizers(finalizers[:len(finalizers)-1])
+			return
+		}
+	}
 }
 
-func manageCleanUpLogic(cr *devv1alpha1.AzurePipelinesPool) error{
-  // perform additional cleanup here
-  return nil
+func manageCleanUpLogic(cr *devv1alpha1.AzurePipelinesPool) error {
+	// perform additional cleanup here
+	return nil
 }
 
 func AddnewPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
-  labels := map[string]string{
-	  "app": cr.Name,
-	  "tier":"frontend",
-  }
-  return &corev1.Pod {
-	  ObjectMeta: metav1.ObjectMeta {
-		  Name:      "azurepipelinepod",
-		  Namespace: cr.Namespace,
-		  Labels:    labels,
-	  },
-	  Spec: corev1.PodSpec{
-		  Containers: []corev1.Container {
-			  {
-				  Name:   cr.Name,
-				  Image:  cr.Spec.ControllerName,
-				  Env:    []corev1.EnvVar {
-					  {
-						  Name: "VSTS_SECRET",
-						  ValueFrom: &corev1.EnvVarSource {
-							  SecretKeyRef: &corev1.SecretKeySelector {
-								  LocalObjectReference: corev1.LocalObjectReference{Name: "vsts"},
-								  Key: "VSTS_SECRET",
-							  },
-						  },
-					  },
-					  {
-						  Name: "POD_NAMESPACE",
-                          Value: cr.Namespace,
-					  },
-				  },
-				  Ports: []corev1.ContainerPort {
-					  {
-						  ContainerPort: 8080,
-					  },
-				  },
-			  },
-		  },
-	  },
-  }
+	labels := map[string]string{
+		"app":  cr.Name,
+		"tier": "frontend",
+	}
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "azurepipelinepod",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  cr.Name,
+					Image: cr.Spec.ControllerName,
+					Env: []corev1.EnvVar{
+						{
+							Name: "VSTS_SECRET",
+							ValueFrom: &corev1.EnvVarSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "vsts"},
+									Key:                  "VSTS_SECRET",
+								},
+							},
+						},
+						{
+							Name:  "POD_NAMESPACE",
+							Value: cr.Namespace,
+						},
+					},
+					Ports: []corev1.ContainerPort{
+						{
+							ContainerPort: 8080,
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func AddnewBuildkitPodForCR(cr *devv1alpha1.AzurePipelinesPool) *appsv1.StatefulSet {
-  labels := map[string]string {
-	  "app": cr.Name,
-  }
+	labels := map[string]string{
+		"app": cr.Name,
+	}
 
-  labels1 := map[string]string {
-	  "app":  cr.Name,
-	  "role": "buildkit",
-  }
+	labels1 := map[string]string{
+		"app":  cr.Name,
+		"role": "buildkit",
+	}
 
-  annotations := map[string]string {
-	  "container.apparmor.security.beta.kubernetes.io/buildkitd": "unconfined",
-	  "container.seccomp.security.alpha.kubernetes.io/buildkitd": "unconfined",
-  }
+	annotations := map[string]string{
+		"container.apparmor.security.beta.kubernetes.io/buildkitd": "unconfined",
+		"container.seccomp.security.alpha.kubernetes.io/buildkitd": "unconfined",
+	}
 
-  return &appsv1.StatefulSet {
-	  TypeMeta: metav1.TypeMeta {
-		  Kind:       "StatefulSet",
-		  APIVersion: "apps/v1",
-	  },
-	  ObjectMeta: metav1.ObjectMeta {
-		  Name:      "buildkitd",
-		  Namespace: cr.Namespace,
-		  Labels:    labels,
-	  },
-	  Spec: appsv1.StatefulSetSpec {
-		  Selector:    &metav1.LabelSelector{MatchLabels:labels},
-		  ServiceName: "buildkitd",
-		  Replicas:    &cr.Spec.BuildkitReplicaCount,
-		  Template: corev1.PodTemplateSpec {
-			  ObjectMeta: metav1.ObjectMeta {
-				  Labels: labels1,
-				  Annotations: annotations,
-			  },
-			  Spec: corev1.PodSpec {
-				  Containers: []corev1.Container {
-					  corev1.Container {
-						  Name:  "buildkitd",
-						  Image: "moby/buildkit:master-rootless",
-						  Args:  []string{"--addr","unix:///run/user/1000/buildkit/buildkitd.sock","--addr","tcp://0.0.0.0:1234","--oci-worker-no-process-sandbox"},
-						  Ports: []corev1.ContainerPort {
-							  {
-								  ContainerPort: 1234,
-							  },
-						  },
-					  },
-				  },
-			  },
-		  },
-	  },
-  }
+	return &appsv1.StatefulSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "StatefulSet",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "buildkitd",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Selector:    &metav1.LabelSelector{MatchLabels: labels},
+			ServiceName: "buildkitd",
+			Replicas:    &cr.Spec.BuildkitReplicaCount,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:      labels1,
+					Annotations: annotations,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						corev1.Container{
+							Name:  "buildkitd",
+							Image: "moby/buildkit:master-rootless",
+							Args:  []string{"--addr", "unix:///run/user/1000/buildkit/buildkitd.sock", "--addr", "tcp://0.0.0.0:1234", "--oci-worker-no-process-sandbox"},
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 1234,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func AddnewBuildkitServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
-	 labels := map[string]string {
-	  "app": cr.Name,
-  }
-  return &corev1.Service {
-	  ObjectMeta: metav1.ObjectMeta {
-		  Namespace: cr.Namespace,
-		  Name:      "buildkitd",
-		  Labels:    labels,
-	  },
-	  Spec: corev1.ServiceSpec {
-		  Selector: labels,
-		  Ports:    []corev1.ServicePort {
-			  {
-				  Port:       1234,
-				  Protocol:   "TCP",
-			  },
-		  },
-	  },
-  }
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "buildkitd",
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Ports: []corev1.ServicePort{
+				{
+					Port:     1234,
+					Protocol: "TCP",
+				},
+			},
+		},
+	}
 }
 
 func AddnewConfigMapForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.ConfigMap {
-  return &corev1.ConfigMap {
-	  ObjectMeta: metav1.ObjectMeta {
-		  Name:      "kubernetes-config",
-		  Namespace: cr.Namespace,
-	  },
-	  Data: map[string]string {
-		  "type": "KUBERNETES",
-	  },
-  }
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kubernetes-config",
+			Namespace: cr.Namespace,
+		},
+		Data: map[string]string{
+			"type": "KUBERNETES",
+		},
+	}
 }
 
 func AddnewServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
-  labels := map[string]string {
-	  "app": cr.Name,
-	  "tier":"frontend",
-  }
-  return &corev1.Service {
-	  ObjectMeta: metav1.ObjectMeta {
-		  Namespace: cr.Namespace,
-		  Name:      "azure-pipelines-pool",
-		  Labels:    labels,
-	  },
-	  Spec: corev1.ServiceSpec {
-		  Selector: labels,
-		  Type:     corev1.ServiceTypeLoadBalancer,
-		  Ports:    []corev1.ServicePort {
-			  {
-				  Port: 8080,
-			  },
-		  },
-	  },
-  }
+	labels := map[string]string{
+		"app":  cr.Name,
+		"tier": "frontend",
+	}
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "azure-pipelines-pool",
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Type:     corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
+				{
+					Port: 8080,
+				},
+			},
+		},
+	}
 }

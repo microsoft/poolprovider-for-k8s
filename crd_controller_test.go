@@ -2,21 +2,22 @@ package main
 
 import (
 	"testing"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	v1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
 	v1controller "github.com/microsoft/k8s-poolprovider/pkg/controller/azurepipelinespool"
-	corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	corev1 "k8s.io/api/core/v1"
+
 	"context"
 	"time"
 
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 var azurepipelinepoolcr *v1alpha1.AzurePipelinesPool
@@ -25,25 +26,25 @@ var (
 	namespace = "azuredevops"
 )
 
-func SetupCustomResource(){
-	
+func SetupCustomResource() {
+
 	// create custom resource
 	azurepipelinepoolcr = &v1alpha1.AzurePipelinesPool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec:  v1alpha1.AzurePipelinesPoolSpec{
-			ControllerName: "prebansa/webserverimage",
+		Spec: v1alpha1.AzurePipelinesPoolSpec{
+			ControllerName:       "prebansa/webserverimage",
 			BuildkitReplicaCount: 1,
-			AgentPools: []v1alpha1.AgentPoolSpec {
+			AgentPools: []v1alpha1.AgentPoolSpec{
 				{
 					PoolName: "linux",
-					PoolSpec: &corev1.PodSpec {
-						Containers: []corev1.Container {
+					PoolSpec: &corev1.PodSpec{
+						Containers: []corev1.Container{
 							{
-								Name:   "vsts-agent",
-								Image:  "prebansa/myagent:v5.16",
+								Name:  "vsts-agent",
+								Image: "prebansa/myagent:v5.16",
 							},
 						},
 					},
@@ -63,7 +64,7 @@ func SetupCustomResource(){
 func TestControllerMustCreateExternalResources(t *testing.T) {
 
 	SetupCustomResource()
-	objs := []runtime.Object {
+	objs := []runtime.Object{
 		azurepipelinepoolcr,
 	}
 
@@ -75,7 +76,6 @@ func TestControllerMustCreateExternalResources(t *testing.T) {
 
 	r := &v1controller.ReconcileAzurePipelinesPool{Client: cl, Scheme: s}
 
-
 	// Mock request to simulate Reconcile() being called on an event for a
 	// watched resource .
 	req := reconcile.Request{
@@ -84,7 +84,7 @@ func TestControllerMustCreateExternalResources(t *testing.T) {
 			Namespace: namespace,
 		},
 	}
-    for i:= 0; i < 5; i++ {
+	for i := 0; i < 5; i++ {
 		res, err := r.Reconcile(req)
 		if err != nil {
 			t.Fatalf("reconcile: (%v)", err)
@@ -93,40 +93,39 @@ func TestControllerMustCreateExternalResources(t *testing.T) {
 			t.Error("reconcile did not return an empty Result")
 		}
 	}
-    
 
 	// Check the pod is created
 	expectedPod := v1controller.AddnewPodForCR(azurepipelinepoolcr)
 	pod := &corev1.Pod{}
 	err := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, pod)
 	if err != nil {
-		t.Fatalf("get pod: (%v)", err)
+		t.Fatalf("get pod failed: (%v)", err)
 	}
 
-	expectedPod1 := v1controller.AddnewBuildkitPodForCR(azurepipelinepoolcr)
-	pod1 := &appsv1.StatefulSet{}
-	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod1.Name, Namespace: expectedPod1.Namespace}, pod1)
+	expectedBuildkitPod := v1controller.AddnewBuildkitPodForCR(azurepipelinepoolcr)
+	buildkitpod := &appsv1.StatefulSet{}
+	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedBuildkitPod.Name, Namespace: expectedBuildkitPod.Namespace}, buildkitpod)
 	if err != nil {
-		t.Fatalf("get pod: (%v)", err)
+		t.Fatalf("get buildkit pod failed: (%v)", err)
 	}
 
 	expectedService := v1controller.AddnewServiceForCR(azurepipelinepoolcr)
 	svc := &corev1.Service{}
 	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedService.Name, Namespace: expectedService.Namespace}, svc)
 	if err != nil {
-		t.Fatalf("get pod: (%v)", err)
+		t.Fatalf("get service failed: (%v)", err)
 	}
 
-	expectedService1 := v1controller.AddnewBuildkitServiceForCR(azurepipelinepoolcr)
-	svc1 := &corev1.Service{}
-	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedService1.Name, Namespace: expectedService.Namespace}, svc1)
+	expectedBuildkitService := v1controller.AddnewBuildkitServiceForCR(azurepipelinepoolcr)
+	buildkitsvc := &corev1.Service{}
+	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedBuildkitService.Name, Namespace: expectedBuildkitService.Namespace}, buildkitsvc)
 	if err != nil {
-		t.Fatalf("get pod: (%v)", err)
+		t.Fatalf("get buildkit service failed: (%v)", err)
 	}
 
 	expectedMap := v1controller.AddnewConfigMapForCR(azurepipelinepoolcr)
-	map1 := &corev1.ConfigMap{}
-	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedMap.Name, Namespace: expectedMap.Namespace},map1)
+	configmap := &corev1.ConfigMap{}
+	err = cl.Get(context.TODO(), types.NamespacedName{Name: expectedMap.Name, Namespace: expectedMap.Namespace}, configmap)
 	if err != nil {
 		t.Fatalf("get pod: (%v)", err)
 	}
@@ -134,7 +133,7 @@ func TestControllerMustCreateExternalResources(t *testing.T) {
 
 func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 	SetupCustomResource()
-	objs := []runtime.Object {
+	objs := []runtime.Object{
 		azurepipelinepoolcr,
 	}
 
@@ -146,7 +145,6 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 
 	r := &v1controller.ReconcileAzurePipelinesPool{Client: cl, Scheme: s}
 
-
 	// Mock request to simulate Reconcile() being called on an event for a
 	// watched resource .
 	req := reconcile.Request{
@@ -155,7 +153,7 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 			Namespace: namespace,
 		},
 	}
-    for i:= 0; i < 5; i++ {
+	for i := 0; i < 5; i++ {
 		res, err := r.Reconcile(req)
 		if err != nil {
 			t.Fatalf("reconcile: (%v)", err)
@@ -180,14 +178,14 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 		t.Fatalf("delete pod failed: (%v)", errd)
 	}
 
-	req1 := reconcile.Request{
+	deletereq := reconcile.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      name,
 			Namespace: namespace,
 		},
 	}
 
-	res, err := r.Reconcile(req1)
+	res, err := r.Reconcile(deletereq)
 	if err != nil {
 		t.Fatalf("reconcile: (%v)", err)
 	}
@@ -195,17 +193,17 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 		t.Error("reconcile did not return an empty Result")
 	}
 
-	time.Sleep(time.Second*1)
-	pod1 := &corev1.Pod{}
-	err1 := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, pod1)
-	if err1 != nil {
-		t.Fatalf("get pod not restarted: (%v)", err1)
+	time.Sleep(time.Second * 1)
+	recreatedpod := &corev1.Pod{}
+	errrecreate := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, recreatedpod)
+	if errrecreate != nil {
+		t.Fatalf("get pod not restarted: (%v)", errrecreate)
 	}
 }
 
 func TestControllerMustRecreateStatefulsetIfDeleted(t *testing.T) {
 	SetupCustomResource()
-	objs := []runtime.Object {
+	objs := []runtime.Object{
 		azurepipelinepoolcr,
 	}
 
@@ -217,7 +215,6 @@ func TestControllerMustRecreateStatefulsetIfDeleted(t *testing.T) {
 
 	r := &v1controller.ReconcileAzurePipelinesPool{Client: cl, Scheme: s}
 
-
 	// Mock request to simulate Reconcile() being called on an event for a
 	// watched resource .
 	req := reconcile.Request{
@@ -226,7 +223,7 @@ func TestControllerMustRecreateStatefulsetIfDeleted(t *testing.T) {
 			Namespace: namespace,
 		},
 	}
-    for i:= 0; i < 5; i++ {
+	for i := 0; i < 5; i++ {
 		res, err := r.Reconcile(req)
 		if err != nil {
 			t.Fatalf("reconcile: (%v)", err)
@@ -248,8 +245,6 @@ func TestControllerMustRecreateStatefulsetIfDeleted(t *testing.T) {
 	if errd != nil {
 		t.Fatalf("delete pod failed: (%v)", errd)
 	}
-
-	
 
 	res, err := r.Reconcile(req)
 	if err != nil {

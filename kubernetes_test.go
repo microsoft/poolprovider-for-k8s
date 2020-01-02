@@ -180,20 +180,20 @@ func TestGetBuildPodShouldReturnBuildKitPodNameIfPresent(t *testing.T) {
 
 func CreateDummyBuildKitPod() {
 	cs := CreateClientSet()
-	var p1 v1.Pod
+	var buildkitpod v1.Pod
 
 	podname := "azure-pipelines-agent"
 
 	dat, _ := ioutil.ReadFile("agentpods/" + podname + ".yaml")
 	var podYaml = string(dat)
-	_ = yaml.Unmarshal([]byte(podYaml), &p1)
-	p1.SetLabels(map[string]string{
+	_ = yaml.Unmarshal([]byte(podYaml), &buildkitpod)
+	buildkitpod.SetLabels(map[string]string{
 		"role": "buildkit",
 	})
 
-	p1.ObjectMeta.Name = "buildkitd-0"
+	buildkitpod.ObjectMeta.Name = "buildkitd-0"
 	podClient := cs.clientset.CoreV1().Pods("azuredevops")
-	_, _ = podClient.Create(&p1)
+	_, _ = podClient.Create(&buildkitpod)
 }
 
 func SetTestingEnvironmentVariables() {

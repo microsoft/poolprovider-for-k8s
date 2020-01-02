@@ -33,7 +33,7 @@ const agentIdLabel = "AgentId"
 func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionResponse {
 
 	var config *rest.Config
-	config, _= rest.InClusterConfig();
+	config, _ = rest.InClusterConfig()
 	var sec *v1.Secret
 	var pod *v1.Pod
 	var crdclient *v1alpha1.AzurePipelinesPoolV1Alpha1Client
@@ -73,12 +73,12 @@ func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionRes
 	webserverpod, _ := podClient.List(metav1.ListOptions{LabelSelector: "app=azurepipelinespool-operator"})
 
 	if webserverpod.Items != nil {
-	AddOwnerRefToObject(pod, AsOwner(&webserverpod.Items[0]))
-	log.Println("Webserver pod added as owner reference to agent pod ")
+		AddOwnerRefToObject(pod, AsOwner(&webserverpod.Items[0]))
+		log.Println("Webserver pod added as owner reference to agent pod ")
 
-	log.Println("create secret called")
+		log.Println("create secret called")
 
-	sec = createSecret(cs, agentRequest, &webserverpod.Items[0])
+		sec = createSecret(cs, agentRequest, &webserverpod.Items[0])
 	} else {
 		sec = createSecret(cs, agentRequest, nil)
 	}
@@ -150,15 +150,15 @@ func DeletePodWithAgentId(agentId string, podnamespace string) PodResponse {
 		return getFailure(response, errors.New("Could not find running pod with AgentId "+agentId))
 	}
 
-	err1 := secretClient.Delete(secrets.Items[0].GetName(), &metav1.DeleteOptions{})
-	if err1 != nil {
-		return getFailure(response, err1)
+	secreterr := secretClient.Delete(secrets.Items[0].GetName(), &metav1.DeleteOptions{})
+	if secreterr != nil {
+		return getFailure(response, secreterr)
 	}
 	log.Println("Delete agent secret done")
 
-	err2 := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
-	if err2 != nil {
-		return getFailure(response, err2)
+	poderr := podClient.Delete(pods.Items[0].GetName(), &metav1.DeleteOptions{})
+	if poderr != nil {
+		return getFailure(response, poderr)
 	}
 	log.Println("Delete agent pod done")
 
