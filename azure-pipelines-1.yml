@@ -38,10 +38,6 @@ stages:
           kubernetesCluster: 'testop'
           command: 'ls'
 
-      - task: kubectlgeneral@3
-        inputs:
-          k8sService: 'test1'
-          subCommand: 'get pods'
           
       - task: Kubernetes@1
         inputs:
