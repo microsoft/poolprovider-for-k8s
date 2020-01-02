@@ -32,10 +32,11 @@ stages:
       - task: Kubernetes@1
         inputs:
           connectionType: 'Kubernetes Service Connection'
-          kubernetesServiceEndpoint: 'k8_l2testcase'
+          kubernetesServiceEndpoint: 'testl2'
           namespace: 'azuredevops'
           command: 'delete'
           arguments: 'azurepipelinespool azurepipelinespool-operator'
+
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
