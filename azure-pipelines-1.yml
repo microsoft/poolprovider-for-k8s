@@ -29,7 +29,7 @@ stages:
         inputs:
           connectionType: 'Kubernetes Service Connection'
           kubernetesServiceEndpoint: 'testl2'
-          namespace: 'azuredevops'
+          namespace: 'default'
           command: 'delete'
           arguments: 'azurepipelinespool azurepipelinespool-operator'
           secretType: 'dockerRegistry'
