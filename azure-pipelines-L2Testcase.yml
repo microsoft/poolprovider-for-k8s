@@ -219,7 +219,7 @@ stages:
           helmVersionToInstall: 'latest'
 
       - task: Kubernetes@1 
-        inputs: 
+        inputs:
           connectionType: 'Kubernetes Service Connection' 
           kubernetesServiceEndpoint: 'k8_l2testcase' 
           namespace: 'azuredevops' 
