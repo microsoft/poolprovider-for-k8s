@@ -3,7 +3,7 @@
 set -e
 
 AGENT_FOLDER="agent"
-AZP_AGENT_VERSION="$(cat /vsts/agent/.agentVersion)"
+AZP_AGENT_VERSION="$(cat /azurepipelines/agent/.agentVersion)"
 AGENTVERSION="$(curl -s "https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest" | jq -r .tag_name[1:])"
 
 echo "Latest agent release version $AGENTVERSION" 
@@ -22,7 +22,7 @@ if [ $AGENTVERSION != $AZP_AGENT_VERSION ]; then
   cd /azp/$AGENT_FOLDER
 
   # Read download URL from the secret
-  AZP_DOWNLOAD_URL="$(cat /vsts/agent/.url)"
+  AZP_DOWNLOAD_URL="$(cat /azurepipelines/agent/.url)"
 
   # Download the requested agent, else fall back to the version that was default when this was released
   if [ -z "$AZP_DOWNLOAD_URL" ]; then
@@ -45,8 +45,8 @@ trap 'cleanup; exit 143' TERM
 
 echo "Mounting the .agent and .credentials files from a different source"
 # /azurepipelines/agent is the default path change below lines if something else is set as mount path in CRD.
-ln -fs /vsts/agent/.agent /azp/$AGENT_FOLDER/.agent
-ln -fs /vsts/agent/.credentials /azp/$AGENT_FOLDER/.credentials
+ln -fs /azurepipelines/agent/.agent /azp/$AGENT_FOLDER/.agent
+ln -fs /azurepipelines/agent/.credentials /azp/$AGENT_FOLDER/.credentials
 
 echo "Running Azure Pipelines agent..."
 

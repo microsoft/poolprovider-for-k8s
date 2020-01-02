@@ -44,22 +44,22 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, label
 	spec := FetchPodSpec(obj, poolname)
 
 	// check if VolumeMounts is not present in the spec; then add the default one
-	if spec!=nil && len(spec.Containers) > 0 && spec.Containers[0].VolumeMounts == nil {
+	if spec != nil && len(spec.Containers) > 0 && spec.Containers[0].VolumeMounts == nil {
 		spec.Containers[0].VolumeMounts = append(spec.Containers[0].VolumeMounts, *getDefaultVolumeMount())
 	}
 
 	if spec != nil {
-	dep := &v1.Pod{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Labels:       labels,
-			GenerateName: "azure-pipelines-agent-",
-		},
-		Spec: *spec,
-	}
+		dep := &v1.Pod{
+			ObjectMeta: meta_v1.ObjectMeta{
+				Labels:       labels,
+				GenerateName: "azure-pipelines-agent-",
+			},
+			Spec: *spec,
+		}
 
-	return dep
-   }
-   return nil
+		return dep
+	}
+	return nil
 }
 
 func (c *AzurePipelinesPoolclient) AddNewPodForCRTest(obj *AzurePipelinesPool, labels map[string]string, poolname string) *v1.Pod {
@@ -70,10 +70,10 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCRTest(obj *AzurePipelinesPool, l
 			GenerateName: "azure-pipelines-agent-",
 		},
 		Spec: v1.PodSpec{
-			Containers: []v1.Container {
+			Containers: []v1.Container{
 				{
-					Name:   "vsts-agent",
-					Image:  "prebansa/myagent:v1",
+					Name:  "vsts-agent",
+					Image: "prebansa/myagent:v1",
 				},
 			},
 		},
@@ -97,9 +97,9 @@ func FetchPodSpec(obj *AzurePipelinesPool, poolname string) *v1.PodSpec {
 func getDefaultVolumeMount() *v1.VolumeMount {
 
 	return &v1.VolumeMount{
-		Name:         "agent-creds",
-		MountPath:    "/vsts/agent",
-		ReadOnly:     true,
+		Name:      "agent-creds",
+		MountPath: "/azurepipelines/agent",
+		ReadOnly:  true,
 	}
 
 }

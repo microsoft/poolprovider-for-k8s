@@ -334,7 +334,7 @@ func AddnewPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
 							Name: "VSTS_SECRET",
 							ValueFrom: &corev1.EnvVarSource{
 								SecretKeyRef: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "vsts"},
+									LocalObjectReference: corev1.LocalObjectReference{Name: "azurepipelines"},
 									Key:                  "VSTS_SECRET",
 								},
 							},

@@ -16,5 +16,5 @@ image:
   tag: v1.25s
   pullPolicy: IfNotPresent
 
-vsts:
+azurepipelines:
   VSTS_SECRET: ""
