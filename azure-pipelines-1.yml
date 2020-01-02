@@ -62,7 +62,7 @@ stages:
         inputs:
           connectionType: 'Kubernetes Service Connection'
           kubernetesServiceEndpoint: 'k8_l2testcase'
-          namespace: 'default'
+          namespace: 'azuredevops'
           command: 'delete'
           arguments: 'azurepipelinespool azurepipelinespool-operator'
       - task: HelmDeploy@0
