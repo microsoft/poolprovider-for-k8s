@@ -29,23 +29,6 @@ stages:
         inputs:
           helmVersionToInstall: 'latest'
 
-      - task: Kubernetes@1
-        inputs:
-          connectionType: 'Kubernetes Service Connection'
-          kubernetesServiceEndpoint: 'testl2'
-          namespace: 'azuredevops'
-          command: 'delete'
-          arguments: 'azurepipelinespool azurepipelinespool-operator'
-
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'delete'
-          arguments: 'release-1115'
-
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
