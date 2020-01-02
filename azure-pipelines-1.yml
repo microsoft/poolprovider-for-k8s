@@ -37,3 +37,9 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop'
           command: 'ls'
+
+      - task: kubectlgeneral@3
+        inputs:
+          k8sService: 'testl2'
+          subCommand: 'get pods'
+          
