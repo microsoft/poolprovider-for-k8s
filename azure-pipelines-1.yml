@@ -29,7 +29,6 @@ stages:
         inputs:
           connectionType: 'Kubernetes Service Connection'
           kubernetesServiceEndpoint: 'testl2'
-          namespace: 'default'
           command: 'get'
           arguments: 'pods'
           secretType: 'dockerRegistry'
