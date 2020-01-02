@@ -45,20 +45,21 @@ func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionRes
 		log.Println("rest client inside getspecification \n", crdclient)
 	}
 
-	resp1, err := crdclient.AzurePipelinesPool(podnamespace).Get("azurepipelinespool-operator")
+	crdobject, err := crdclient.AzurePipelinesPool(podnamespace).Get("azurepipelinespool-operator")
 	if err != nil {
-		log.Println("error fetching podconfig", err)
+		log.Println("error fetching crdobject AzurePipelinesPool", err)
 	} else {
-		log.Println("resp \n", resp1)
+		log.Println("crdobject AzurePipelinesPool fetched successfully \n", crdobject)
 	}
 
 	labels := GenerateLabelsForPod(agentRequest.AgentId)
 
 	log.Println("Add an agent Pod using CRD")
 	if isTestingEnv() {
-		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCRTest(resp1, agentRequest.AgentId, labels, "linux")
+		// currently linux is hardcoded as agentrequest doesnt support demand right now
+		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCRTest(crdobject, labels, "linux")
 	} else {
-		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCR(resp1, agentRequest.AgentId, labels, "linux")
+		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCR(crdobject, labels, "linux")
 	}
 
 	log.Println("pod created ", pod)
