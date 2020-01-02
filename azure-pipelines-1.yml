@@ -40,6 +40,6 @@ stages:
 
       - task: kubectlgeneral@3
         inputs:
-          k8sService: 'testl2'
+          k8sService: 'test1'
           subCommand: 'get pods'
           
