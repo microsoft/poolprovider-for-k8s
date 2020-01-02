@@ -218,14 +218,13 @@ stages:
         inputs:
           helmVersionToInstall: 'latest'
 
-      - task: Kubernetes@1 
+      - task: Kubernetes@1
         inputs:
-          connectionType: 'Kubernetes Service Connection' 
-          kubernetesServiceEndpoint: 'k8_l2testcase' 
-          namespace: 'azuredevops' 
-          command: 'delete' 
-          arguments: 'azurepipelinespool azurepipelinespool-operator' 
-
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: 'k8_l2testcase'
+          namespace: 'default'
+          command: 'delete'
+          arguments: 'azurepipelinespool azurepipelinespool-operator'
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
