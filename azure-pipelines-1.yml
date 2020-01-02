@@ -24,36 +24,7 @@ stages:
       vmImage: 'ubuntu-latest'
 
     steps:
-      - task: PowerShell@2
-        inputs:
-          targetType: 'inline'
-          script: |
       
-            Write-Host "Hello World"
-            
-            $header = @{
-              "Accept"="application/json"
-              "Authorization"="Basic OmprbGFnNXFoaWR4djRxcGc1dGJoMnZoa3RvdXFhaGlseG5meHhscW15dDd3cTRreHRkemE="
-              "Content-Type"="application/json"
-             } 
-         
-             $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
-        
-             Write-Host $response2
-        
-             $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
-        
-             $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq 1115}).id
-        
-             Write-Host "QueueId is ". $queueId
-             $url = "$(URI)/$(projectname)/_apis/distributedtask/queues/$($queueId)?api-version=5.0-preview"
-            
-             Write-Host "Delete url is ". $url
-             $response = Invoke-WebRequest -Uri $url -Method 'Delete' -Headers $header
-            
-             Write-Host $response
-             Write-Host 'Deleted Agent Pool'
-
       - task: HelmInstaller@1
         inputs:
           helmVersionToInstall: 'latest'
