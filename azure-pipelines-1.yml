@@ -32,6 +32,8 @@ stages:
           namespace: 'azuredevops'
           command: 'delete'
           arguments: 'azurepipelinespool azurepipelinespool-operator'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
 
       - task: HelmInstaller@1
         inputs:
