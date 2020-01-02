@@ -87,3 +87,9 @@ func isTestingEnv() bool {
 	}
 	return false
 }
+
+func SetTestingEnvironmentVariables() {
+	os.Setenv("COUNTTEST", "1")
+	os.Setenv("VSTS_SECRET", "sharedsecret1234")
+	client.clientset = fake.NewSimpleClientset()
+}

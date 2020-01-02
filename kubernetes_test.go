@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -194,9 +193,4 @@ func CreateDummyBuildKitPod() {
 	buildkitpod.ObjectMeta.Name = "buildkitd-0"
 	podClient := cs.clientset.CoreV1().Pods("azuredevops")
 	_, _ = podClient.Create(&buildkitpod)
-}
-
-func SetTestingEnvironmentVariables() {
-	os.Setenv("COUNTTEST", "1")
-	os.Setenv("VSTS_SECRET", "sharedsecret1234")
 }
