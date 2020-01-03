@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: vsts-agent
-        image: prebansa/myagent:v6.0
+        image: prebansa/myagent:v6.2
         env:
         - name: RUNNING_ON
           valueFrom:
