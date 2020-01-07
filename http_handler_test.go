@@ -128,8 +128,7 @@ func TestReleaseHandlerShouldBeSuccessful(t *testing.T) {
 }
 
 func TestGetBuildPodHandlerShouldBeSuccessful(t *testing.T) {
-	SetTestingEnvironmentVariables()
-	CreateDummyBuildKitPod()
+	SetTestingEnvironmentVariables(true)
 
 	var response PodResponse
 	var jsonStr = []byte("")

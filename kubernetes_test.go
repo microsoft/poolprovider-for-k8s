@@ -1,13 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"testing"
-
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/ghodss/yaml"
 )
 
 const testnamespace = "azuredevops"
@@ -166,31 +161,11 @@ func TestGetBuildPodShouldReturnEmptyStringIfNoBuildKitPodPresent(t *testing.T) 
 func TestGetBuildPodShouldReturnBuildKitPodNameIfPresent(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
-
-	CreateDummyBuildKitPod()
+	SetTestingEnvironmentVariables(true)
 
 	testGetBuildpod := GetBuildKitPod("test", testnamespace)
 	if testGetBuildpod.Message == "" {
 		t.Errorf("Test failed")
 	}
 
-}
-
-func CreateDummyBuildKitPod() {
-	cs := CreateClientSet()
-	var buildkitpod v1.Pod
-
-	podname := "azure-pipelines-agent"
-
-	dat, _ := ioutil.ReadFile("agentpods/" + podname + ".yaml")
-	var podYaml = string(dat)
-	_ = yaml.Unmarshal([]byte(podYaml), &buildkitpod)
-	buildkitpod.SetLabels(map[string]string{
-		"role": "buildkit",
-	})
-
-	buildkitpod.ObjectMeta.Name = "buildkitd-0"
-	podClient := cs.clientset.CoreV1().Pods("azuredevops")
-	_, _ = podClient.Create(&buildkitpod)
 }

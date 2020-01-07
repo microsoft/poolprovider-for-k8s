@@ -37,6 +37,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 }
 
 func NewClient(cfg *rest.Config) (*AzurePipelinesPoolV1Alpha1Client, error) {
+
+	if IsTestingEnv() {
+		return &testingclient, nil
+	}
 	scheme := runtime.NewScheme()
 	SchemeBuilder := runtime.NewSchemeBuilder(addKnownTypes)
 	if err := SchemeBuilder.AddToScheme(scheme); err != nil {
@@ -52,22 +56,8 @@ func NewClient(cfg *rest.Config) (*AzurePipelinesPoolV1Alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("rest client inside newclient", client)
+	log.Println("Dynamic rest client value - ", client)
 	return &AzurePipelinesPoolV1Alpha1Client{RestClient: client}, nil
-}
-
-func NewClientTest() (*AzurePipelinesPoolV1Alpha1Client, error) {
-	/*scheme := runtime.NewScheme()
-	SchemeBuilder := runtime.NewSchemeBuilder(addKnownTypes)
-	if err := SchemeBuilder.AddToScheme(scheme); err != nil {
-		return nil, err
-	}
-	client, err := rest.RESTClientFor(&rest.Config{APIPath: "/apis", ContentConfig: rest.ContentConfig{GroupVersion: &SchemeGroupVersion, NegotiatedSerializer: serializer.NewCodecFactory(scheme)}})
-	if err != nil {
-		return nil, err
-	}
-	log.Println("rest client inside newclient", client)*/
-	return &testingclient, nil
 }
 
 func SetClient(s *runtime.Scheme ) {
@@ -75,7 +65,6 @@ func SetClient(s *runtime.Scheme ) {
 	if err != nil {
 		
 	}
-	log.Println("rest client inside newclient", client)
+
 	testingclient.RestClient = client
-	//testingclient.RestClient =  s
 }

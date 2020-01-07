@@ -38,31 +38,21 @@ func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionRes
 	var pod *v1.Pod
 	var crdclient *v1alpha1.AzurePipelinesPoolV1Alpha1Client
 
-	if isTestingEnv() {
-		crdclient, _ = v1alpha1.NewClientTest()
-	} else {
-		crdclient, _ = v1alpha1.NewClient(config)
-		log.Println("rest client inside getspecification \n", crdclient)
-	}
+	crdclient, _ = v1alpha1.NewClient(config)
 
 	crdobject, err := crdclient.AzurePipelinesPool(podnamespace).Get("azurepipelinespool-operator")
 	if err != nil {
-		log.Println("error fetching crdobject AzurePipelinesPool", err)
+		log.Println("Error fetching crdobject AzurePipelinesPool", err)
 	} else {
-		log.Println("crdobject AzurePipelinesPool fetched successfully \n", crdobject)
+		log.Println("Crdobject AzurePipelinesPool fetched successfully \n", crdobject)
 	}
 
 	labels := GenerateLabelsForPod(agentRequest.AgentId)
 
 	log.Println("Add an agent Pod using CRD")
-	if isTestingEnv() {
-		// currently linux is hardcoded as agentrequest doesnt support demand right now
-		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCRTest(crdobject, labels, "linux")
-	} else {
-		pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCR(crdobject, labels, "linux")
-	}
+	pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCR(crdobject, labels, "linux")
 
-	log.Println("pod created ", pod)
+	log.Println("Agent pod spec fetched ", pod)
 
 	cs := CreateClientSet()
 
@@ -70,22 +60,22 @@ func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionRes
 	var response AgentProvisionResponse
 
 	podClient := cs.clientset.CoreV1().Pods(podnamespace)
-	webserverpod, _ := podClient.List(metav1.ListOptions{LabelSelector: "app=azurepipelinespool-operator"})
+	webserverpod, webserverpoderr := podClient.List(metav1.ListOptions{LabelSelector: "app=azurepipelinespool-operator"})
 
-	if webserverpod.Items != nil {
+	if webserverpoderr == nil && webserverpod.Items != nil {
 		AddOwnerRefToObject(pod, AsOwner(&webserverpod.Items[0]))
 		log.Println("Webserver pod added as owner reference to agent pod ")
 
-		log.Println("create secret called")
+		log.Println("Creating the agent secret")
 
 		sec = createSecret(cs, agentRequest, &webserverpod.Items[0])
 	} else {
-		sec = createSecret(cs, agentRequest, nil)
+		log.Println("Web Server Pod not found")
 	}
 
 	// Mount the secrets as a volume
 	pod.Spec.Volumes = append(pod.Spec.Volumes, *getSecretVolume(sec.Name))
-	log.Println("secrets mounted as volume")
+	log.Println("Secrets mounted as volume")
 
 	_, err2 := podClient.Create(pod)
 	if err2 != nil {
@@ -181,7 +171,7 @@ func getAgentSecret() *v1.Secret {
 func createSecret(cs *k8s, request AgentRequest, m *v1.Pod) *v1.Secret {
 	secret := getAgentSecret()
 
-	log.Println("parsing secret data from agent request")
+	log.Println("Parsing secret data from agent request")
 	agentSettings, _ := json.Marshal(request.AgentConfiguration.AgentSettings)
 	agentCredentials, _ := json.Marshal(request.AgentConfiguration.AgentCredentials)
 
