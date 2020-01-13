@@ -1,13 +1,16 @@
-package main 
+package main
 
 import (
-	"path/filepath"
 	"os"
+	"path/filepath"
 
+	v1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 var client k8s
@@ -65,18 +68,56 @@ func homeDir() string {
 }
 
 func CreateClientSet() *k8s {
-	
-	//client = k8s{}
-	testingMode := os.Getenv("COUNTTEST")
-	
-	if testingMode == "1" || testingMode == "2" {
-		if testingMode == "1" {
+
+	if v1alpha1.IsTestingEnv() {
+		if client.clientset == nil {
 			client.clientset = fake.NewSimpleClientset()
-			os.Setenv("COUNTTEST","2")
 		}
 	} else {
-	  	cs, _ := GetClientSet()
-	  	client.clientset = cs
+		cs, _ := GetClientSet()
+		client.clientset = cs
 	}
 	return &client
+}
+
+func SetTestingEnvironmentVariables(params ...bool) {
+	os.Setenv("IS_TESTENVIRONMENT", "true")
+	os.Setenv("VSTS_SECRET", "sharedsecret1234")
+	client.clientset = fake.NewSimpleClientset()
+	if len(params) == 0 {
+		params = append(params, false)
+	}
+	CreateDummyPod(params[0])
+}
+
+func CreateDummyPod(isbuildkit bool) {
+	cs := CreateClientSet()
+
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "azurepipelinesagentpod",
+			Namespace: "azuredevops",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "agentimage",
+					Image: "prebansa/myagent:v5.16",
+				},
+			},
+		},
+	}
+	pod.SetLabels(map[string]string{
+		"app": "azurepipelinespool-operator",
+	})
+
+	if isbuildkit {
+		pod.SetLabels(map[string]string{
+			"role": "buildkit",
+		})
+		pod.ObjectMeta.Name = "buildkitd-0"
+	}
+
+	podClient := cs.clientset.CoreV1().Pods("azuredevops")
+	_, _ = podClient.Create(pod)
 }

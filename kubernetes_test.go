@@ -1,23 +1,18 @@
 package main
 
 import (
-	"io/ioutil"
-	"os"
-	"strings"
 	"testing"
-
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/ghodss/yaml"
 )
+
+const testnamespace = "azuredevops"
 
 func TestCreatePod(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
@@ -28,9 +23,9 @@ func TestCreatePod(t *testing.T) {
 func TestCreatePodMustCreateSecret(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
@@ -49,10 +44,10 @@ func TestCreatePodMustCreateSecret(t *testing.T) {
 func TestCreateSecret(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 	cs := CreateClientSet()
 
-	testSecret := createSecret(cs, agentrequest)
+	testSecret := createSecret(cs, agentrequest, nil)
 
 	if testSecret.Name == "newname" {
 		t.Errorf("Secret creation failed")
@@ -60,26 +55,13 @@ func TestCreateSecret(t *testing.T) {
 
 }
 
-func TestAgentSpecificationMustAssignRandomNameToAgentPod(t *testing.T) {
-	var agentrequest AgentRequest
-	agentrequest.AgentId = "1"
-	agentVersion := "2.158.0"
-	SetTestingEnvironmentVariables()
-	pod, _ := getAgentSpecification(agentrequest.AgentId, agentVersion)
-
-	if !strings.Contains(pod.ObjectMeta.GenerateName, "azure-pipelines-agent-") {
-		t.Errorf("Agent pod not generated with random name")
-	}
-
-}
-
 func TestCreateSecretMustHaveAllDataValues(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 	cs := CreateClientSet()
 
-	testSecret := createSecret(cs, agentrequest)
+	testSecret := createSecret(cs, agentrequest, nil)
 
 	if _, ok := testSecret.Data[".agent"]; !ok {
 		t.Errorf("Secret doesn't have .agent data")
@@ -101,15 +83,15 @@ func TestCreateSecretMustHaveAllDataValues(t *testing.T) {
 func TestDeletePodShouldPassIfMatchingAgentIdinAgentRequest(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
 	}
 
-	testDeletepod := DeletePodWithAgentId(agentrequest.AgentId)
+	testDeletepod := DeletePodWithAgentId(agentrequest.AgentId, testnamespace)
 	if testDeletepod.Status != "success" {
 		t.Errorf("Pod deletion failed")
 	}
@@ -121,13 +103,13 @@ func TestDeletePodShouldFailIfNotMatchingAgentIdinAgentRequest(t *testing.T) {
 	agentrequest.AgentId = "1"
 	SetTestingEnvironmentVariables()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
 	}
 
 	//Trying to delete pod with AgentId = 2
-	testDeletepod := DeletePodWithAgentId("2")
+	testDeletepod := DeletePodWithAgentId("2", testnamespace)
 	if testDeletepod.Status != "fail" {
 		t.Errorf("Pod deletion passed but should have failed")
 	}
@@ -137,14 +119,14 @@ func TestDeletePodShouldFailIfNotMatchingAgentIdinAgentRequest(t *testing.T) {
 func TestDeletePodMustDeleteSecret(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
 	}
 
-	testDeletepod := DeletePodWithAgentId(agentrequest.AgentId)
+	testDeletepod := DeletePodWithAgentId(agentrequest.AgentId, testnamespace)
 	if testDeletepod.Status != "success" {
 		t.Errorf("Pod deletion passed but should have failed")
 	}
@@ -164,12 +146,12 @@ func TestGetBuildPodShouldReturnEmptyStringIfNoBuildKitPodPresent(t *testing.T) 
 	agentrequest.AgentId = "1"
 	SetTestingEnvironmentVariables()
 
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, testnamespace)
 	if testPod.Accepted != true {
 		t.Errorf("Pod creation failed")
 	}
 
-	testDeletepod := GetBuildKitPod("test")
+	testDeletepod := GetBuildKitPod("test", testnamespace)
 	if testDeletepod.Message != "" {
 		t.Errorf("Test failed")
 	}
@@ -179,36 +161,11 @@ func TestGetBuildPodShouldReturnEmptyStringIfNoBuildKitPodPresent(t *testing.T) 
 func TestGetBuildPodShouldReturnBuildKitPodNameIfPresent(t *testing.T) {
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	SetTestingEnvironmentVariables()
+	SetTestingEnvironmentVariables(true)
 
-	CreateDummyBuildKitPod()
-
-	testGetBuildpod := GetBuildKitPod("test")
+	testGetBuildpod := GetBuildKitPod("test", testnamespace)
 	if testGetBuildpod.Message == "" {
 		t.Errorf("Test failed")
 	}
 
-}
-
-func CreateDummyBuildKitPod() {
-	cs := CreateClientSet()
-	var p1 v1.Pod
-
-	podname := "azure-pipelines-agent"
-
-	dat, _ := ioutil.ReadFile("agentpods/" + podname + ".yaml")
-	var podYaml = string(dat)
-	_ = yaml.Unmarshal([]byte(podYaml), &p1)
-	p1.SetLabels(map[string]string{
-		"role": "buildkit",
-	})
-
-	p1.ObjectMeta.Name = "buildkitd-0"
-	podClient := cs.clientset.CoreV1().Pods("azuredevops")
-	_, _ = podClient.Create(&p1)
-}
-
-func SetTestingEnvironmentVariables() {
-	os.Setenv("COUNTTEST", "1")
-	os.Setenv("VSTS_SECRET", "sharedsecret1234")
 }

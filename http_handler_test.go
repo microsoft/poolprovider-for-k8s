@@ -11,11 +11,11 @@ import (
 )
 
 func TestAcquireHandlerShouldBeSuccessful(t *testing.T) {
-	SetTestingEnvironmentVariables()
 
 	var response AgentProvisionResponse
 	var jsonStr = []byte(`{"AgentId":"1"}`)
 	
+	SetupCustomResource()
 	req, _ := http.NewRequest("POST", "/acquire", bytes.NewBuffer(jsonStr))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-Azure-Signature", "4f6a97c5aa13477ed775dd20cdd7cf44477e310ba683545144d5112e77d88be967a43791da0696ded702a32ca0c190ab831dcd9204521b9a9ebe413066699ef9")
@@ -49,7 +49,7 @@ func TestAcquireHandlerShouldBeSuccessful(t *testing.T) {
 }
 
 func TestAcquireHandlerShouldFailIfGetRequest(t *testing.T) {
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
 	var jsonStr = []byte(`{"AgentId":"1"}`)
 
@@ -66,7 +66,7 @@ func TestAcquireHandlerShouldFailIfGetRequest(t *testing.T) {
 }
 
 func TestAcquireHandlerShouldFailIfHmacNotValid(t *testing.T) {
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 
 	var jsonStr = []byte(`{"AgentId":"12"}`)
 	
@@ -85,10 +85,10 @@ func TestAcquireHandlerShouldFailIfHmacNotValid(t *testing.T) {
 }
 
 func TestReleaseHandlerShouldBeSuccessful(t *testing.T) {
-	SetTestingEnvironmentVariables()
+	SetupCustomResource()
 	var agentrequest AgentRequest
 	agentrequest.AgentId = "1"
-	testPod := CreatePod(agentrequest)
+	testPod := CreatePod(agentrequest, "azuredevops")
 
 	if (testPod.Accepted != true){
 		t.Errorf("Pod creation failed")
@@ -128,8 +128,7 @@ func TestReleaseHandlerShouldBeSuccessful(t *testing.T) {
 }
 
 func TestGetBuildPodHandlerShouldBeSuccessful(t *testing.T) {
-	SetTestingEnvironmentVariables()
-	CreateDummyBuildKitPod()
+	SetTestingEnvironmentVariables(true)
 
 	var response PodResponse
 	var jsonStr = []byte("")
