@@ -97,7 +97,7 @@ stages:
                      
                         $header = @{
                           "Accept"="application/json"
-                          "Authorization"="Basic OmprbGFnNXFoaWR4djRxcGc1dGJoMnZoa3RvdXFhaGlseG5meHhscW15dDd3cTRreHRkemE="
+                          "Authorization"="Basic $(encodedpat)"
                           "Content-Type"="application/json"
                          } 
                      
@@ -192,7 +192,7 @@ stages:
             
             $header = @{
               "Accept"="application/json"
-              "Authorization"="Basic OmprbGFnNXFoaWR4djRxcGc1dGJoMnZoa3RvdXFhaGlseG5meHhscW15dDd3cTRreHRkemE="
+              "Authorization"="Basic $(encodedpat)"
               "Content-Type"="application/json"
              } 
          
