@@ -90,7 +90,7 @@ stages:
             ingressip=$(kubectl get service -l app=nginx-ingress --namespace=azuredevops -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
             echo "nginx ingress ip is " $ingressip
             
-            dnsname="azurepipelinespooltest"
+            dnsname="azure$(poolname)"
             
             publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)
             
@@ -132,7 +132,7 @@ stages:
           command: 'install'
           chartType: 'FilePath'
           chartPath: 'helm/k8s-certmanager'
-          overrideValues: 'configvalues.dnsname=azurepipelinespooltest.southindia.cloudapp.azure.com'
+          overrideValues: 'configvalues.dnsname=azure$(poolname).southindia.cloudapp.azure.com'
           valueFile: 'helm/k8s-certmanager/values.yaml'
           waitForExecution: false
           arguments: 'releasecert-$(Build.BuildId)'
@@ -143,7 +143,7 @@ stages:
           script: |
             Write-Host "Executing powershell script"
                      
-                        $ip="https://azurepipelinespooltest.southindia.cloudapp.azure.com"
+                        $ip="https://azure$(poolname).southindia.cloudapp.azure.com"
                      
                         echo $ip
                      
