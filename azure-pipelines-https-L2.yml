@@ -119,7 +119,7 @@ stages:
             # Install the cert-manager Helm chart
             helm install --name-template cert-manager --namespace cert-manager --version v0.8.0 jetstack/cert-manager
             
-            sleep 12
+            sleep 70
             
             helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
 
