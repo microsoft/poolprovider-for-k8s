@@ -23,6 +23,19 @@ stages:
       vmImage: 'ubuntu-latest'
 
     steps:
+
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: 'latest'
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'httpsaks'
+          command: 'init'
+          upgradeTiller: false
+          waitForExecution: false
       - task: AzureCLI@1
         inputs:
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
