@@ -121,7 +121,7 @@ stages:
             
             sleep 70
             
-            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set 'configvalues.dnsname=$(fqdn)'
+            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set 'configvalues.dnsname=$fqdn'
 
        
       - task: PowerShell@2
