@@ -1,0 +1,10 @@
+# Default values for k8s-poolprovider.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+app:
+  namespace: azuredevops
+
+configvalues:
+  email: preetibansal0508@gmail.com
+  dnsname: azurepipelinespool.southindia.cloudapp.azure.com

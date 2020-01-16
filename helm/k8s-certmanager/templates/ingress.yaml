@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: azurepipelinespoolingress
+  namespace: {{ .Values.app.namespace }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  tls:
+  - hosts:
+    - {{ .Values.configvalues.dnsname }}
+    secretName: tls-secret
+  rules:
+  - host: {{ .Values.configvalues.dnsname }}
+    http:
+      paths:
+      - path: /(.*)
+        backend:
+          serviceName: azure-pipelines-pool
+          servicePort: 80
