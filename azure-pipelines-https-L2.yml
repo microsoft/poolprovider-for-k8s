@@ -121,9 +121,22 @@ stages:
             
             sleep 70
             
-            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
+            #helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
 
-       
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'httpsaks'
+          command: 'install'
+          chartType: 'FilePath'
+          chartPath: 'helm/k8s-certmanager'
+          overrideValues: 'configvalues.dnsname=azurepipelinespooltest.southindia.cloudapp.azure.com'
+          valueFile: 'helm/k8s-certmanager/values.yaml'
+          waitForExecution: false
+          arguments: 'releasecert-$(Build.BuildId)'
+
       - task: PowerShell@2
         inputs:
           targetType: 'inline'
