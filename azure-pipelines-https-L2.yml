@@ -119,9 +119,9 @@ stages:
             # Install the cert-manager Helm chart
             helm install --name-template cert-manager --namespace cert-manager --version v0.8.0 jetstack/cert-manager
             
-            sleep 70
+            sleep 12
             
-            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set 'configvalues.dnsname=$fqdn'
+            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set configvalues.dnsname=$fqdn
 
        
       - task: PowerShell@2
@@ -130,7 +130,7 @@ stages:
           script: |
             Write-Host "Executing powershell script"
                      
-                        $ip="https://azurepipelinespooltest.southindia.cloudapp.azure.com/"
+                        $ip="https://azurepipelinespooltest.southindia.cloudapp.azure.com"
                      
                         echo $ip
                      
