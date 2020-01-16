@@ -304,6 +304,14 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'httpsaks'
           command: 'delete'
+          arguments: 'cert-manager -n cert-manager'
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'httpsaks'
+          command: 'delete'
           arguments: 'releasecert-$(Build.BuildId)'
 
       - task: HelmDeploy@0
