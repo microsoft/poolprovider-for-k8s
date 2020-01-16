@@ -90,7 +90,7 @@ stages:
             ingressip=$(kubectl get service -l app=nginx-ingress --namespace=azuredevops -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
             echo "nginx ingress ip is " $ingressip
             
-            dnsname="azurepipelinespool"
+            dnsname="azurepipelinespooltest"
             
             publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)
             
@@ -121,7 +121,7 @@ stages:
             
             sleep 70
             
-            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
+            helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set 'configvalues.dnsname=$(fqdn)'
 
        
       - task: PowerShell@2
@@ -130,7 +130,7 @@ stages:
           script: |
             Write-Host "Executing powershell script"
                      
-                        $ip="https://azurepipelinespool.southindia.cloudapp.azure.com/"
+                        $ip="https://azurepipelinespooltest.southindia.cloudapp.azure.com/"
                      
                         echo $ip
                      
