@@ -32,4 +32,4 @@ stages:
             
             fqdn="azurepipelinespooltest.southindia.cloudapp.azure.com"
             
-            echo "'$fqdn'"
+            echo "$fqdn"
