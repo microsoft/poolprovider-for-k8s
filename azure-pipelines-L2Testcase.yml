@@ -207,10 +207,10 @@ stages:
           kubernetesCluster: 'testop'
           command: 'ls'
 
-          - task: Bash@3
-          inputs:
-            targetType: 'inline'
-            script: |
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
               # Write your commands here
               
               echo 'Hello world'
