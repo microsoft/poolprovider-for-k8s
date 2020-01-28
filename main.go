@@ -18,7 +18,6 @@ func main() {
 
 	podnamespace = os.Getenv("POD_NAMESPACE")
 
-	s.HandleFunc("/definitions", func(w http.ResponseWriter, r *http.Request) { EmptyResponeHandler(w, r) })
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
 	s.HandleFunc("/buildPod", func(w http.ResponseWriter, r *http.Request) { GetBuildPodHandler(w, r) })
@@ -32,7 +31,7 @@ func AcquireAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		log.Println("Recieved agent acquire request ....")
 		if isRequestHmacValid(req) {
-			log.Println("Hmac Validated")
+			log.Println("Hmac Validated for acquire request")
 			var agentRequest AgentRequest
 
 			requestBody, err := ioutil.ReadAll(req.Body)
@@ -60,7 +59,7 @@ func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		log.Println("Recieved release agent request ....")
 		if isRequestHmacValid(req) {
-			log.Println("Hmac Validated")
+			log.Println("Hmac Validated for release request")
 			var agentRequest ReleaseAgentRequest
 			requestBody, _ := ioutil.ReadAll(req.Body)
 			json.Unmarshal(requestBody, &agentRequest)
@@ -80,20 +79,20 @@ func ReleaseAgentHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func EmptyResponeHandler(resp http.ResponseWriter, req *http.Request) {
-	var emptyResponse PodResponse
-	writeJsonResponse(resp, http.StatusCreated, emptyResponse)
-}
-
 func GetBuildPodHandler(resp http.ResponseWriter, req *http.Request) {
 
 	log.Println("Recieved GetBuildPod request ....")
 	if req.Method == http.MethodGet {
-		keyHeader := "key"
-		headerVal := req.Header.Get(keyHeader)
-		log.Println("Calling getbuildkit pod")
-		var pods = GetBuildKitPod(headerVal, podnamespace)
-		writeJsonResponse(resp, http.StatusCreated, pods)
+		if isRequestHmacValid(req) {
+			log.Println("Hmac Validated for buildpod request")
+			keyHeader := "key"
+			headerVal := req.Header.Get(keyHeader)
+			log.Println("Calling getbuildkit pod")
+			var pods = GetBuildKitPod(headerVal, podnamespace)
+			writeJsonResponse(resp, http.StatusCreated, pods)
+		} else {
+			writeJsonResponse(resp, http.StatusForbidden, GetError(NoValidSignatureError))
+		}
 	} else {
 		writeJsonResponse(resp, http.StatusMethodNotAllowed, GetError(InvalidRequestError))
 	}
@@ -118,7 +117,6 @@ func isRequestHmacValid(req *http.Request) bool {
 	if headerVal == "" {
 		return false
 	}
-
 	// Compute HMAC for body and compare against the one sent by azure dev ops
 	return ValidateHash(string(requestBody), headerVal)
 }
