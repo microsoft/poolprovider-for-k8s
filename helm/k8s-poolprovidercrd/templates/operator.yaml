@@ -17,7 +17,7 @@ spec:
       containers:
         - name: k8s-poolprovider
           # Replace this with the built image name
-          image: prebansa/testbuildctl:v4.1
+          image: prebansa/testbuildctl:v4.3
           command:
           - k8s-poolprovider
           imagePullPolicy: Always

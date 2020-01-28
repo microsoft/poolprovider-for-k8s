@@ -169,7 +169,7 @@ stages:
 
       - task: ContainerBuild@0
         inputs:
-          #dockerRegistryServiceConnection: 'dock1'
+          sharedSecret: '$(shardSecret)'
           repository: 'prebansa/testbuildctl'
           Dockerfile: 'Dockerfile'
       
