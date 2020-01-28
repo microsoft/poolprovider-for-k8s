@@ -80,7 +80,7 @@ stages:
           targetType: 'inline'
           script: |
             Write-Host "Executing powershell script"
-                     
+                        sleep 50
                         $ip=$(kubectl get service azure-pipelines-pool -n azuredevops -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
                      
                         echo $ip
