@@ -2,28 +2,52 @@
 
 # command to run script and generate certificate on-fly ./setup.sh azpipelinespooltestcert true
 # command to run script using existing certificate ./setup.sh azpipelinespooltest false privateKey.key certificate.crt
+
+usage() {
+    echo "Usage :"
+    echo "./setup.sh -d <dnsname> -u <useletsencrypt> or"
+    echo "./setup.sh -d <dnsname> -u <useletsencrypt> -k <keypath> -c <certificate path>"
+    echo "-d : (string) dnsname ex: testdomainname"
+    echo "-u : (bool - true|false) uses letsencrypt if set to true else pass the exiting certifacte path"
+    echo "-k : (string) indicates existing key path; used when -u is set to false"
+    echo "-c : (string) indicates existing certificate path; used when -u is set to false"
+    echo "-h : help"
+    exit 0;
+    }
 if [ "$#" -lt "2" ]
 then
-    echo "Pass atleast two arguments - DNS Name, Bool value to indicate if existing certificate used"
-    exit 0
+    usage
 fi
 
-if [ "$2" = false -a "$#" -lt "4" ]
+while getopts ":d:u:k:c:h" o;
+do
+
+  case "${o}" in
+    d)
+        echo "dns name set"
+        dnsname=${OPTARG}
+        ;;
+    u)
+        echo "Use letsencrypt variable"
+        useletsencrypt=${OPTARG}
+        ;;
+    k)
+        echo "Keypath set"
+        keypath=${OPTARG}
+        ;;
+    c)
+        echo "Certificate path set"
+        certpath=${OPTARG}
+        ;;
+    *)
+        usage
+  esac
+done
+
+if [ "$useletsencrypt" = false -a -z "$keypath" -o -z "$certpath" ]
 then
-    echo "Provide the files with key and certificate"
-    exit 0
-fi
-
-dnsname=$1
-echo "1. DNS name set"
-
-useletsencrypt=$2
-echo "2. Use letsencrypt variable set"
-
-if [ "$useletsencrypt" = false ]
-then
-    keypath=$3
-    certpath=$4
+    echo "If using existing certificate keypath and certificate path are mandatory"
+    usage
 fi
 
 helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=sharedsecret1234"
@@ -41,7 +65,10 @@ echo "6. Helm repo updated"
 helm install stable/nginx-ingress --generate-name --namespace azuredevops 
 echo "7. Installed nginx-ingress"
 
-while true; do
+cnt=0
+
+while [ $cnt -lt 100 ]
+do
 
   ingressip=$(kubectl get service -l app=nginx-ingress --namespace=azuredevops -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
@@ -50,6 +77,10 @@ while true; do
     echo "8. Found ingressip :" $ingressip
     break
   fi
+  cnt=`expr $cnt + 1`
+  sleep 2
+  echo "Waiting for ingressip to be available...."
+
 done
 
 publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)

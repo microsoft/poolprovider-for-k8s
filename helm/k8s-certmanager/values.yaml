@@ -9,5 +9,4 @@ app:
   namespace: azuredevops
 
 configvalues:
-  email: preetibansal0508@gmail.com
   dnsname: azurepipelinespool.southindia.cloudapp.azure.com
