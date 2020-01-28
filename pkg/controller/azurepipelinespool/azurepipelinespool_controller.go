@@ -466,7 +466,6 @@ func AddnewServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: labels,
-			Type:     corev1.ServiceTypeLoadBalancer,
 			Ports: []corev1.ServicePort{
 				{
 					Port: 80,

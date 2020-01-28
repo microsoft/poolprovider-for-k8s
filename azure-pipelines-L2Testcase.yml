@@ -73,66 +73,7 @@ stages:
         inputs:
           azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
           scriptLocation: 'inlineScript'
-          inlineScript: |
-            az aks get-credentials --name testop --resource-group processmonitor-rg
-            helm repo add stable https://kubernetes-charts.storage.googleapis.com
-            
-            helm repo update
-            
-            helm install stable/nginx-ingress --generate-name --namespace azuredevops
-            
-            sleep 70
-            
-            
-            ingressip=$(kubectl get service -l app=nginx-ingress --namespace=azuredevops -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-            echo "nginx ingress ip is " $ingressip
-            
-            dnsname="azure$(poolname)"
-            
-            publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)
-            
-            # Update public ip address with DNS name
-            response=$(az network public-ip update --ids $publicpid --dns-name $dnsname )
-            
-            fqdn=`echo $response | jq '.dnsSettings.fqdn'`
-            
-            echo $fqdn
-            
-            # Install the CustomResourceDefinition resources separately
-            kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
-            
-            # Create the namespace for cert-manager
-            kubectl create namespace cert-manager
-            
-            # Label the cert-manager namespace to disable resource validation
-            kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
-            
-            # Add the Jetstack Helm repository
-            helm repo add jetstack https://charts.jetstack.io
-            
-            # Update your local Helm chart repository cache
-            helm repo update
-            
-            # Install the cert-manager Helm chart
-            helm install --name-template cert-manager --namespace cert-manager --version v0.8.0 jetstack/cert-manager
-            
-            sleep 70
-            
-            #helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
-
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'install'
-          chartType: 'FilePath'
-          chartPath: 'helm/k8s-certmanager'
-          overrideValues: 'configvalues.dnsname=azure$(poolname).southindia.cloudapp.azure.com'
-          valueFile: 'helm/k8s-certmanager/values.yaml'
-          waitForExecution: false
-          arguments: 'releasecert-$(Build.BuildId)'
+          inlineScript: 'az aks get-credentials --name testop --resource-group processmonitor-rg'
        
       - task: PowerShell@2
         inputs:
@@ -140,17 +81,17 @@ stages:
           script: |
             Write-Host "Executing powershell script"
                      
-            $ip="https://azure$(poolname).southindia.cloudapp.azure.com"
+                        $ip=$(kubectl get service azure-pipelines-pool -n azuredevops -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
                      
                         echo $ip
                      
                         $body = @{
                            "name"="$(poolname)"
                            "type"="Ignore"
-                           "acquireAgentEndpoint"="$($ip)/acquire"
-                           "releaseAgentEndpoint"="$($ip)/release"
-                           "getAgentDefinitionEndpoint"="$($ip)/definitions"
-                           "getAgentRequestStatusEndpoint"="$($ip)/definitions"
+                           "acquireAgentEndpoint"="http://$($ip):8080/acquire"
+                           "releaseAgentEndpoint"="http://$($ip):8080/release"
+                           "getAgentDefinitionEndpoint"="http://$($ip):8080/definitions"
+                           "getAgentRequestStatusEndpoint"="http://$($ip):8080/definitions"
                            "sharedSecret"="$(sharedSecret)"
                          } | ConvertTo-Json
                      
@@ -206,16 +147,6 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop'
           command: 'ls'
-
-      - task: Bash@3
-        inputs:
-          targetType: 'inline'
-          script: |
-              # Write your commands here
-              
-              echo 'Hello world'
-              
-              sleep 120
   
 - stage: Connect_with_agent_created_in_first_stage 
   jobs:
@@ -238,7 +169,7 @@ stages:
 
       - task: ContainerBuild@0
         inputs:
-          #dockerRegistryServiceConnection: 'dock1'
+          sharedSecret: '$(shardSecret)'
           repository: 'prebansa/testbuildctl'
           Dockerfile: 'Dockerfile'
       
@@ -301,26 +232,8 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop'
           command: 'delete'
-          arguments: 'cert-manager -n cert-manager'
-      
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'delete'
-          arguments: 'releasecert-$(Build.BuildId)'
-    
-      - task: HelmDeploy@0
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          azureResourceGroup: 'processmonitor-rg'
-          kubernetesCluster: 'testop'
-          command: 'delete'
           arguments: 'release-$(Build.BuildId)'
-    
+
       - task: HelmDeploy@0
         inputs:
           connectionType: 'Azure Resource Manager'
@@ -328,11 +241,3 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop'
           command: 'ls'
-    
-      - task: AzureCLI@1
-        inputs:
-          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            az aks get-credentials --name testop --resource-group processmonitor-rg
-            kubectl delete namespace cert-manager
