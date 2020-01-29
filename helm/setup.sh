@@ -5,25 +5,26 @@
 
 usage() {
     echo "Usage :"
-    echo "./setup.sh -d <dnsname> -u <useletsencrypt> or"
-    echo "./setup.sh -d <dnsname> -u <useletsencrypt> -k <keypath> -c <certificate path>"
-    echo "-d : (string) dnsname ex: testdomainname"
-    echo "-u : (bool - true|false) uses letsencrypt if set to true else pass the exiting certifacte path"
+    echo "./setup.sh -s <sharedsecret> -d <dnsname> -u <useletsencrypt> or"
+    echo "./setup.sh -s <sharedsecret> -d <dnsname> -u <useletsencrypt> -k <keypath> -c <certificate path>"
+    echo "-d : (string) dnsname (mandatory) ex: testdomainname"
+    echo "-u : (bool - true|false) (mandatory) uses letsencrypt if set to true else pass the exiting certifacte path"
     echo "-k : (string) indicates existing key path; used when -u is set to false"
     echo "-c : (string) indicates existing certificate path; used when -u is set to false"
     echo "-n : (string) namespace"
+    echo "-s : (string) sharedsecret (mandatory)"
     echo "-h : help"
     exit 0;
     }
 
 namespaceval="azuredevops"
 
-if [ "$#" -lt "2" ]
+if [ "$#" -lt "3" ]
 then
     usage
 fi
 
-while getopts ":d:u:k:c:n:h" o;
+while getopts ":d:u:k:c:n:s:h" o;
 do
 
   case "${o}" in
@@ -47,10 +48,20 @@ do
         echo "namespace set"
         namespaceval=${OPTARG}
         ;;
+    s)
+        echo "shared secret set"
+        sharedsecretval=${OPTARG}
+        ;;
     *)
         usage
   esac
 done
+
+if [ -z "$sharedsecretval" ]
+then
+    echo "Shared secret is mandatory"
+    usage
+fi
 
 if [ "$useletsencrypt" = false ]
 then
@@ -61,7 +72,7 @@ then
     fi
 fi
 
-helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=sharedsecret1234" --set "app.namespace=$namespaceval"
+helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=$sharedsecretval" --set "app.namespace=$namespaceval"
 echo "K8s-poolprovidercrd helm chart installed"
 
 sed -i 's/\(.*namespace:.*\)/  namespace: '$namespaceval'/g' k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml
