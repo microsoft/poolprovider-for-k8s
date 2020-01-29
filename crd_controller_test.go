@@ -94,12 +94,12 @@ func TestControllerMustCreateExternalResources(t *testing.T) {
 		}
 	}
 
-	// Check the pod is created
-	expectedPod := v1controller.AddnewPodForCR(azurepipelinepoolcr)
-	pod := &corev1.Pod{}
-	err := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, pod)
+	// Check the deployment is created
+	expectedDeployment := v1controller.AddnewDeploymentForCR(azurepipelinepoolcr)
+	deployment := &appsv1.Deployment{}
+	err := cl.Get(context.TODO(), types.NamespacedName{Name: expectedDeployment.Name, Namespace: expectedDeployment.Namespace}, deployment)
 	if err != nil {
-		t.Fatalf("get pod failed: (%v)", err)
+		t.Fatalf("get deployment failed: (%v)", err)
 	}
 
 	expectedBuildkitPod := v1controller.AddnewBuildkitPodForCR(azurepipelinepoolcr)
@@ -163,17 +163,15 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 		}
 	}
 
-	expectedPod := v1controller.AddnewPodForCR(azurepipelinepoolcr)
-	pod := &corev1.Pod{}
-	err := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, pod)
+	expectedDeployment := v1controller.AddnewDeploymentForCR(azurepipelinepoolcr)
+	deployment := &appsv1.Deployment{}
+	err := cl.Get(context.TODO(), types.NamespacedName{Name: expectedDeployment.Name, Namespace: expectedDeployment.Namespace}, deployment)
 	if err != nil {
-		t.Fatalf("get pod: (%v)", err)
+		t.Fatalf("get deployment: (%v)", err)
 	}
 
-	//prevpodUID := &pod.UID
-
-	//delete pod
-	errd := cl.Delete(context.TODO(), pod)
+	//delete deployment
+	errd := cl.Delete(context.TODO(), deployment)
 	if errd != nil {
 		t.Fatalf("delete pod failed: (%v)", errd)
 	}
@@ -194,8 +192,8 @@ func TestControllerMustRecreatePodIfDeleted(t *testing.T) {
 	}
 
 	time.Sleep(time.Second * 1)
-	recreatedpod := &corev1.Pod{}
-	errrecreate := cl.Get(context.TODO(), types.NamespacedName{Name: expectedPod.Name, Namespace: expectedPod.Namespace}, recreatedpod)
+	recreateddeployment := &appsv1.Deployment{}
+	errrecreate := cl.Get(context.TODO(), types.NamespacedName{Name: expectedDeployment.Name, Namespace: expectedDeployment.Namespace}, recreateddeployment)
 	if errrecreate != nil {
 		t.Fatalf("get pod not restarted: (%v)", errrecreate)
 	}

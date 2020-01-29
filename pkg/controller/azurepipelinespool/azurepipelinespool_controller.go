@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -49,7 +50,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &devv1alpha1.AzurePipelinesPool{},
 	})
@@ -139,32 +140,32 @@ func (r *ReconcileAzurePipelinesPool) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, nil
 	}
 
-	// Define a new Pod object
-	pod := AddnewPodForCR(instance)
+	// Define a new webserver Deployment object
+	deployment := AddnewDeploymentForCR(instance)
 
 	// Set AzurePipelinePool instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, deployment, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Pod already exists
-	foundPod := &corev1.Pod{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, foundPod)
+	// Check if this Deployment already exists
+	foundDeployment := &appsv1.Deployment{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.Client.Create(context.TODO(), pod)
+		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		err = r.Client.Create(context.TODO(), deployment)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully - don't requeue
+		// Deployment created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", foundPod.Namespace, "Pod.Name", foundPod.Name)
+	// Deployment already exists - don't requeue
+	reqLogger.Info("Skip reconcile: Pod already exists", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 
 	// Define a new ConfigMapobject
 	configMap := AddnewConfigMapForCR(instance)
@@ -313,40 +314,50 @@ func manageCleanUpLogic(cr *devv1alpha1.AzurePipelinesPool) error {
 	return nil
 }
 
-func AddnewPodForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Pod {
+func AddnewDeploymentForCR(cr *devv1alpha1.AzurePipelinesPool) *appsv1.Deployment {
 	labels := map[string]string{
 		"app":  cr.Name,
 		"tier": "frontend",
 	}
-	return &corev1.Pod{
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azurepipelinepod",
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  cr.Name,
-					Image: cr.Spec.ControllerName,
-					Env: []corev1.EnvVar{
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
-							Name: "VSTS_SECRET",
-							ValueFrom: &corev1.EnvVarSource{
-								SecretKeyRef: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "azurepipelines"},
-									Key:                  "VSTS_SECRET",
+							Name:  cr.Name,
+							Image: cr.Spec.ControllerName,
+							Env: []corev1.EnvVar{
+								{
+									Name: "VSTS_SECRET",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{Name: "azurepipelines"},
+											Key:                  "VSTS_SECRET",
+										},
+									},
+								},
+								{
+									Name:  "POD_NAMESPACE",
+									Value: cr.Namespace,
 								},
 							},
-						},
-						{
-							Name:  "POD_NAMESPACE",
-							Value: cr.Namespace,
-						},
-					},
-					Ports: []corev1.ContainerPort{
-						{
-							ContainerPort: 8080,
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 8080,
+								},
+							},
 						},
 					},
 				},
@@ -455,10 +466,11 @@ func AddnewServiceForCR(cr *devv1alpha1.AzurePipelinesPool) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: labels,
-			Type:     corev1.ServiceTypeLoadBalancer,
 			Ports: []corev1.ServicePort{
 				{
-					Port: 8080,
+					Port: 80,
+					TargetPort: intstr.FromInt(8080),
+					Protocol: "TCP",
 				},
 			},
 		},

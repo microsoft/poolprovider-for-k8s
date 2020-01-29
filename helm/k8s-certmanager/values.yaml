@@ -1,0 +1,12 @@
+# Default values for k8s-poolprovider.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+letsencryptcert:
+  val: true
+
+app:
+  namespace: azuredevops
+
+configvalues:
+  dnsname: azurepipelinespool.southindia.cloudapp.azure.com
