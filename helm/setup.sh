@@ -64,6 +64,8 @@ fi
 helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=sharedsecret1234" --set "app.namespace=$namespaceval"
 echo "K8s-poolprovidercrd helm chart installed"
 
+sed -i 's/\(.*namespace:.*\)/  namespace: '$namespaceval'/g' k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml
+
 kubectl apply -f k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml
 echo "Custom resource yaml applied"
 
