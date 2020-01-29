@@ -4,7 +4,7 @@ metadata:
   name: azurepipelinespool-operator
   namespace: azuredevops
 spec:
-  controllerImage: prebansa/k8s-poolprovider:v2.21
+  controllerImage: prebansa/k8s-poolprovider:v2.22
   buildkitReplicas: 1
   agentPools:
   - name: windows

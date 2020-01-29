@@ -186,6 +186,8 @@ func createSecret(cs *k8s, request AgentRequest, m *v1.Pod) *v1.Secret {
 	secret.Data[".credentials"] = ([]byte(string(agentCredentials)))
 	secret.Data[".url"] = ([]byte(request.AgentConfiguration.AgentDownloadUrls["linux-x64"]))
 	secret.Data[".agentVersion"] = ([]byte(request.AgentConfiguration.AgentVersion))
+	secret.ObjectMeta.SetNamespace(podnamespace)
+	log.Println("Secret to be created in namespace: " + secret.ObjectMeta.GetNamespace())
 
 	if m != nil {
 		AddOwnerRefToObject(secret, AsOwner(m))
@@ -195,6 +197,7 @@ func createSecret(cs *k8s, request AgentRequest, m *v1.Pod) *v1.Secret {
 	secret2, err := secretClient.Create(secret)
 
 	if err != nil {
+		log.Println(err)
 		secret2.Name = "newname"
 	}
 	log.Println("Secret creation done")
