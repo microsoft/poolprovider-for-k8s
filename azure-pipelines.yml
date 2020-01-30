@@ -9,5 +9,6 @@ pool:
 steps:
 - task: ContainerBuild@0
   inputs:
-    sharedSecret: 'sharedsecret1234'
+    dockerRegistryServiceConnection: 'dock1'
+    repository: 'prebansa/dockerbuildrepo'
     Dockerfile: 'Dockerfile'
