@@ -7,8 +7,7 @@ pool:
   name: 'ospoolh18'
 
 steps:
-- task: ContainerBuild@0
-  inputs:
+
 - task: ContainerBuild@0
   inputs:
     dockerRegistryServiceConnection: 'dock1'
