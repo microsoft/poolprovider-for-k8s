@@ -3,17 +3,11 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- master
-
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Docker@2
-  displayName: buildAndPush
+- task: ContainerBuild@0
   inputs:
-    containerRegistry: dockerconnection
-    repository: prebansa/myagent
-    Dockerfile: 'agent-custom/Dockerfile'
-    buildContext: 'agent-custom'
+    sharedSecret: 'sharedsecret1234'
+    Dockerfile: 'Dockerfile'
