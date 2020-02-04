@@ -7,7 +7,7 @@ trigger:
 - azure-pipelines-sleep
 
 pool:
-  name: 'agentcert5'
+  name: 'demopool'
 
 steps:
 - task: Bash@3
