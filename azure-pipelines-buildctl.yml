@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 pool:
-  name: 'agentcert3'
+  name: 'agentcert5'
 
 steps:
 
