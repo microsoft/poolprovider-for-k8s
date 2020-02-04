@@ -7,7 +7,7 @@ trigger:
 - azure-pipelines-sleep
 
 pool:
-  name: 'demopool'
+  name: 'demopool1'
 
 steps:
 - task: Bash@3
