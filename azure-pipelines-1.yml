@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 pool:
-  name: 'agentcert4'
+  name: 'agentcert5'
 
 steps:
 - task: Bash@3
