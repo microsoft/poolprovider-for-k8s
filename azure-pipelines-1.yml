@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- users/prebansa/azure-pipelines-sleep
+- azure-pipelines-sleep
 
 pool:
   name: 'agentcert5'
