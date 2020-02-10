@@ -20,7 +20,6 @@ func main() {
 
 	s.HandleFunc("/acquire", func(w http.ResponseWriter, r *http.Request) { AcquireAgentHandler(w, r) })
 	s.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) { ReleaseAgentHandler(w, r) })
-	s.HandleFunc("/buildPod", func(w http.ResponseWriter, r *http.Request) { GetBuildPodHandler(w, r) })
 
 	// Start HTTP Server with request logging
 	log.Fatal(http.ListenAndServe(":8080", s))

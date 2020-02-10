@@ -127,7 +127,8 @@ func TestReleaseHandlerShouldBeSuccessful(t *testing.T) {
 	}
 }
 
-func TestGetBuildPodHandlerShouldBeSuccessful(t *testing.T) {
+// Commenting test case for BuildPod as the API is now removed
+/*func TestGetBuildPodHandlerShouldBeSuccessful(t *testing.T) {
 	SetTestingEnvironmentVariables(true)
 
 	var response PodResponse
@@ -150,4 +151,4 @@ func TestGetBuildPodHandlerShouldBeSuccessful(t *testing.T) {
 				t.Errorf("Http buildPod Call failed")
 			}
 	}
-}
+}*/

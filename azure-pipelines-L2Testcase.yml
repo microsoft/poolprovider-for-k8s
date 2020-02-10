@@ -236,7 +236,6 @@ stages:
 
       - task: ContainerBuild@0
         inputs:
-          sharedSecret: '$(sharedSecret)'
           repository: 'prebansa/testbuildctl'
           Dockerfile: 'Dockerfile'
       
