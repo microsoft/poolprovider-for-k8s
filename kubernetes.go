@@ -50,6 +50,7 @@ func CreatePod(agentRequest AgentRequest, podnamespace string) AgentProvisionRes
 	labels := GenerateLabelsForPod(agentRequest.AgentId)
 
 	log.Println("Add an agent Pod using CRD")
+	// currently as demands are not supported so creating agent for Linux
 	pod = crdclient.AzurePipelinesPool(podnamespace).AddNewPodForCR(crdobject, labels, "linux")
 
 	log.Println("Agent pod spec fetched ", pod)
