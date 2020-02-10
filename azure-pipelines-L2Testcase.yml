@@ -45,10 +45,10 @@ stages:
           command: 'install'
           chartType: 'FilePath'
           chartPath: 'helm/k8s-poolprovidercrd'
+          releaseName: 'k8spoolprovidercrd'
           overrideValues: 'azurepipelines.VSTS_SECRET=$(sharedSecret)'
           valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
           waitForExecution: false
-          arguments: 'release-$(Build.BuildId)'
 
       - task: Kubernetes@1
         inputs:
@@ -129,10 +129,10 @@ stages:
           command: 'install'
           chartType: 'FilePath'
           chartPath: 'helm/k8s-certmanager'
+          releaseName: 'k8spoolprovidercert'
           overrideValues: 'configvalues.dnsname=azure$(poolname).southindia.cloudapp.azure.com'
           valueFile: 'helm/k8s-certmanager/values.yaml'
           waitForExecution: false
-          arguments: 'releasecert-$(Build.BuildId)'
        
       - task: PowerShell@2
         inputs:
@@ -307,7 +307,7 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop1'
           command: 'delete'
-          arguments: 'releasecert-$(Build.BuildId)'
+          arguments: 'k8spoolprovidercert'
     
       - task: HelmDeploy@0
         inputs:
@@ -316,7 +316,7 @@ stages:
           azureResourceGroup: 'processmonitor-rg'
           kubernetesCluster: 'testop1'
           command: 'delete'
-          arguments: 'release-$(Build.BuildId)'
+          arguments: 'k8spoolprovidercrd'
     
       - task: HelmDeploy@0
         inputs:
