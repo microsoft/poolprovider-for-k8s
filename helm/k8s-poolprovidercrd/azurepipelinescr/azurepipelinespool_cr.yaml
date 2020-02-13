@@ -4,16 +4,16 @@ metadata:
   name: azurepipelinespool-operator
   namespace: azuredevops
 spec:
-  controllerImage: mcr.microsoft.com/azurepipelinespool/k8s-poolprovider:v1.0
+  controllerImage: mcr.microsoft.com/azurepipelinespool/k8s-poolprovider:v1.1
   buildkitReplicas: 1
   agentPools:
-  - name: windows
-    spec:
-      containers:
-      - name: vsts-agent
-        image: prebansa/myagent:v5.17
   - name: linux
     spec:
       containers:
       - name: vsts-agent
         image: mcr.microsoft.com/azurepipelinespool/azure-pipelines-agent:v1.0
+  - name: windows
+    spec:
+      containers:
+      - name: vsts-agent
+        image: prebansa/myagent:v5.17
