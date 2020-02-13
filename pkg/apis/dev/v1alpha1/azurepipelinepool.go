@@ -22,7 +22,7 @@ type AzurePipelinesPoolV1Alpha1Client struct {
 
 type AzurePipelinesPoolInterface interface {
 	Get(name string) (*AzurePipelinesPool, error)
-	AddNewPodForCR(obj *AzurePipelinesPool, labels map[string]string, poolName string) *v1.Pod
+	AddNewPodForCR(obj *AzurePipelinesPool, labels map[string]string) *v1.Pod
 }
 
 type AzurePipelinesPoolclient struct {
@@ -39,7 +39,7 @@ func (c *AzurePipelinesPoolclient) Get(name string) (*AzurePipelinesPool, error)
 	return result, err
 }
 
-func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, labels map[string]string, poolname string) *v1.Pod {
+func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, labels map[string]string) *v1.Pod {
 
 	var spec *v1.PodSpec
 	if IsTestingEnv() {
@@ -52,7 +52,7 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, label
 			},
 		}
 	} else {
-		spec = FetchPodSpec(obj, poolname)
+		spec = FetchPodSpec(obj)
 	}
 
 	// append the RUNNING_ON environment variable
@@ -81,14 +81,11 @@ func (c *AzurePipelinesPoolclient) AddNewPodForCR(obj *AzurePipelinesPool, label
 	return nil
 }
 
-func FetchPodSpec(obj *AzurePipelinesPool, poolname string) *v1.PodSpec {
+func FetchPodSpec(obj *AzurePipelinesPool) *v1.PodSpec {
 
-	if obj.Spec.AgentPools != nil {
-		for i := range obj.Spec.AgentPools {
-			if obj.Spec.AgentPools[i].PoolName == poolname {
-				return obj.Spec.AgentPools[i].PoolSpec
-			}
-		}
+	if obj.Spec.AgentPools != nil && len(obj.Spec.AgentPools) > 0 {
+		// currently as demands are not supported so creating agentpod from agentspec being passed at first index
+		return obj.Spec.AgentPools[0].PoolSpec
 	}
 
 	return nil
