@@ -1,0 +1,26 @@
+# Starter pipeline
+
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az login
+      
+      az aks get-credentials --name testaks1 --resource-group processmonitor-rg
+      
+      cd helm
+      
+      ./setup.sh -u true -s sharedsecret1234
