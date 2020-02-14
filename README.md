@@ -1,12 +1,78 @@
 # k8s-poolprovider
-helm install k8s-poolprovider --name=myhelmchart --set "vsts.VSTS_SECRET=shared secret"
 
-## For local testing
-Use the kubernetes.yaml and buildkit.yaml under Manifests folder to set up the application on your cluster. This works if you want to test the containerised application on a kubernetes cluster.
+## Introduction
 
-When using VS Code, the launch.json has been appropriately modified for local debugging. If debugging locally, 
-1. Make sure you can run kubectl commands from your machine, and a kubeconfig file is present on your machine.
-2. Create a new namespace 'azuredevops' on your cluster.
-3. Create an opaque secret in the azuredevops namespace with the required secrets set. `kubectl create secret generic vsts --from-literal=VSTS_SECRET=sharedSecret -n azuredevops`
-4. Voila! You can start debugging directly from VS code. When the deployment happens, hit localhost:8082 with the correct APIs and see the app in action.
+When using multi-tenant hosted pools there are times the jobs remain in queued state because all the agents are occupied or we still hold the physical resources even when there are very few requests present to be addressed. This causes performance issues. To address the problems above, we have implemented Kubernetes based poolprovider which provides the elasticity of agent pools. It uses Kubernetes cluster as the build infrastructure.
 
+This repository consists implementation of two major helm charts -
+#### 1. k8s-poolprovidercrd :
+This helm chart installs all the resources required for configuring Kubernetes poolprovider resources on the Kuberenetes cluster. It first installs the controller implemented using Operator-SDK. This is required for lifecycle management of poolprovider resources deployed in the cluster. As soon as user applies the custom resource yaml i.e. [azurepipelinespool_cr.yaml](https://github.com/microsoft/k8s-poolprovider/blob/prebansa-readme/helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml); the controller instantiates multiple external resources like webserver deployment, service, buildkit pods etc. The controller handles the reinitialization and reconfiguration at runtime if any changes are observed in the configured instances.
+  User can make changes to Custom resource file i.e. azurepipelinespool_cr.yaml as per requirements. In this file user can add modified controller container image, change the number of buildkit pods instances and add the customised agent container images, refer this [CRD](https://github.com/microsoft/k8s-poolprovider/blob/master/helm/k8s-poolprovidercrd/templates/azurepipelinespools_crd.yaml) specification.
+
+#### 2. k8s-certmanager :
+This helm chart installs different resources required for configuring the load balancer endpoint with https support.
+  ##### Approach 1 - User provides the existing certificates and Key 
+   In this helm chart installs the ingress resource to configure the rules that route traffic to internal webserver already installed as part of previous helm chart. Assuming user has already created a tls-secret with the existing certificate and key.
+  ##### Approach 2 - Use Let's Encrypt to create a valid certificate and Key 
+   In this helm chart installs the ClusterIsuer and Certificate along with ingress resource.
+    
+## Steps to configure the poolprovider on Kubernetes cluster
+
+1. Install k8s-poolprovidercrd helm chart
+   helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=$sharedsecretval" --set  "app.namespace=$namespaceval"
+   sharedsecretval - Value must be of atleast 16 characters
+   namespaceval - Namespace where all the poolprovider resources will be deployed 
+2. Apply poolprovider custom resource yaml
+   kubectl apply azurepipelinespool_cr.yaml
+3. Run helm install stable/nginx-ingress
+   helm install stable/nginx-ingress --generate-name --namespace $namespaceval
+4. Execute commands to link the ingress service public ip with valid DNS name
+   For azure following set of commands are used - 
+   kubectl get service -l app=nginx-ingress --namespace=$namespaceval -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+   publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)
+   az network public-ip update --ids $publicpid --dns-name $dnsname
+5. Run helm install cert-manager if you want to use Let's Encrypt else execute 
+   kubectl create secret tls tls-secret --key $keypath --cert $certpath -n $namespace
+   keypath - Specify path for key 
+   certpath - Specify path for certificate
+6. Install k8s-certmanager helm chart
+   helm install k8s-certmanager --name-template k8spoolprovidercert --set "configvalues.dnsname=$fqdn" --set "letsencryptcert.val=false"  --set "app.namespace=$namespaceval"
+   fqdn - Fully qualified domain name for which the key and certificate are generated
+
+
+### User can configure Azure Kubernetes Cluster using existing setup script - 
+Note - If using AKS cluster user needs to have az login and get-credentails
+
+Before running the script user need to have az login.
+##### Approach 1 - User provides the existing certificates and Key
+   ./setup.sh -s "sharedsecret" -d "dnsname" -u "useletsencrypt" -k "keypath" -c "certificate path"
+##### Approach 2 - Use Let's Encrypt to create a valid certificate and Key 
+   ./setup.sh -s "sharedsecret" -d "dnsname" -u "useletsencrypt"
+
+##### Description of option arguments passed in the script
+      
+      -d : (string) dnsname (mandatory) ex: testdomainname
+      -u : (bool - true|false) (mandatory) uses letsencrypt if set to true else pass the exiting certifacte path
+      -k : (string) indicates existing key path; used when -u is set to false
+      -c : (string) indicates existing certificate path; used when -u is set to false
+      -n : (string) namespace (optional)
+      -s : (string) sharedsecret (mandatory)
+      -h : help
+
+Note : As part of setup script we bind the public ip of ingress with the DNS name provided by user. Currently to perform this operation script is using az commands if you want to configure cluster other than AKS please change those commands.
+
+## Steps to add Agent pool configured as Kubernetes poolprovider
+
+1. Run the powershell script poolprovidersetup.ps1
+
+	./poolprovidersetup.ps1 
+  
+  
+   ##### Description of option arguments passed in the script
+   
+        URI : Account URI to be configured for poolprovider
+        PATToken : PAT token for the account
+        PoolName : AgentPool name to be configured as Kubernetes poolprovider
+        DNSName : Same DNS name with which the key and secrets are generated
+        Sharedsecret : Secret value having atleast 16 characters; needs to be xact same value as provided while configuring the cluster
+        TargetSize : Target parallelism required in agent pool
