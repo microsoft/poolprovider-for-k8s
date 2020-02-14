@@ -23,6 +23,17 @@ steps:
       
       az aks get-credentials --name testaks1 --resource-group processmonitor-rg
       
+- task: HelmInstaller@1
+  inputs:
+    helmVersionToInstall: '3.0.3'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      
       cd helm
       
       ./setup.sh -u true -s sharedsecret1234 -d azure$(poolname).southindia.cloudapp.azure.com
