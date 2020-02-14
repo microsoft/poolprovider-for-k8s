@@ -41,7 +41,7 @@ This helm chart installs different resources required for configuring the load b
 
 
 ### User can configure Azure Kubernetes Cluster using existing setup script - 
-Note - If using AKS cluster user needs to have az login and get-credentails
+Note - If using AKS cluster user needs to have az login and get access credentials for a managed Kubernetes cluster using az get-credentials command
 
 Before running the script user need to have az login.
 ##### Approach 1 - User provides the existing certificates and Key
