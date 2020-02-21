@@ -23,7 +23,7 @@ In order to set up your Kubernetes cluster as the build infrastructure, you need
 ## 1. Configure the poolprovider on Kubernetes cluster
 
 1. Install k8s-poolprovidercrd helm chart   
-   `helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=$sharedsecretval" --set  "app.namespace=$namespaceval"`   
+   `helm install k8s-poolprovidercrd --name-template k8spoolprovidercrd --set "azurepipelines.VSTS_SECRET=sharedsecretval" --set  "app.namespace=namespaceval"`   
    sharedsecretval - Value must be of atleast 16 characters    
    namespaceval - Namespace where all the poolprovider resources will be deployed 
 2. Apply poolprovider custom resource yaml   
@@ -33,19 +33,20 @@ In order to set up your Kubernetes cluster as the build infrastructure, you need
 4. Execute commands to link the ingress service public ip with valid DNS name   
    For azure following set of commands are used -     
    ```
-   kubectl get service -l app=nginx-ingress --namespace=$namespaceval -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-   publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv) 
+   kubectl get service -l app=nginx-ingress --namespace=namespaceval -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+   publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, 'ingressip')].[id]" --output tsv) 
    
-   az network public-ip update --ids $publicpid --dns-name $dnsname    
+   az network public-ip update --ids $publicpid --dns-name dnsname 
+   Note : You can learn more about the az network public-ip update command [here](https://docs.microsoft.com/en-us/cli/azure/network/public-ip?view=azure-cli-latest#az-network-public-ip-update)
    ```
 5. Run helm install cert-manager if you want to use Let's Encrypt else execute    
-   `kubectl create secret tls tls-secret --key $keypath --cert $certpath -n $namespace`   
+   `kubectl create secret tls tls-secret --key keypath --cert certpath -n namespace`   
    keypath - Specify path for key    
    certpath - Specify path for certificate   
 6. Install k8s-certmanager helm chart   
-   `helm install k8s-certmanager --name-template k8spoolprovidercert --set "configvalues.dnsname=$fqdn" --set "letsencryptcert.val=false"  --set "app.namespace=$namespaceval"`   
+   `helm install k8s-certmanager --name-template k8spoolprovidercert --set "configvalues.dnsname=fqdn" --set "letsencryptcert.val=false"  --set "app.namespace=namespaceval"`   
    fqdn - Fully qualified domain name for which the key and certificate are generated
-   >namespaceval - does the specification remain the same as the previous step?
+   namespaceval - Namespace value, this parameter is same as required in Step 1
 
 ### User can configure Azure Kubernetes Cluster using existing setup script - 
 Note - If using an existing AKS cluster, user needs to have az login and get access credentials for a managed Kubernetes cluster using `az aks get-credentials` command. Refer [here](https://docs.microsoft.com/cli/azure/aks?view=azure-cli-latest#az-aks-get-credentials) for the command documentation.
