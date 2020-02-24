@@ -2,7 +2,11 @@
 
 ## Introduction
 
-When using multi-tenant hosted pools there are times the jobs remain in queued state because all the agents are occupied or we still hold the physical resources even when there are very few requests present to be addressed. This causes performance issues. To address the problems above, we have implemented Kubernetes based poolprovider which provides the elasticity of agent pools. It uses Kubernetes cluster as the build infrastructure.
+When using multi-tenant hosted pools there are times the jobs remain in queued state because all the agents are occupied or we still hold the physical resources even when there are very few requests present to be addressed. This causes performance issues. To address the problems above, we have implemented Kubernetes based poolprovider which provides the elasticity of agent pools. 
+
+> This feature is in private preview. We recommend that you <ins>**do not use this in production**.</ins> 
+
+The k8s-poolprovider uses Kubernetes cluster as the build infrastructure.
 
 This repository consists implementation of two major helm charts -
 #### 1. k8s-poolprovidercrd :
