@@ -333,3 +333,4 @@ stages:
           inlineScript: |
             az aks get-credentials --name testop1 --resource-group processmonitor-rg
             kubectl delete namespace cert-manager
+            kubectl delete customresourcedefinition azurepipelinespools.dev.azure.com
