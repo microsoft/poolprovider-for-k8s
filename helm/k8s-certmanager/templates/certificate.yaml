@@ -5,7 +5,7 @@ metadata:
   name: tls-secret
   namespace: {{ .Values.app.namespace }}
 spec:
-  secretName: tls-secret-staging
+  secretName: tls-secret
   dnsNames:
   - {{ .Values.configvalues.dnsname }}
   acme:
