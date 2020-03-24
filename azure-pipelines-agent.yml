@@ -18,7 +18,7 @@ steps:
     command: 'buildAndPush'
     Dockerfile: 'agent-custom/Dockerfile'
     buildContext: 'agent-custom'
-- task: ComponentGovernanceComponentDetectionPpe@0
+- task: ComponentGovernanceComponentDetection@0
   inputs:
     scanType: 'Register'
     verbosity: 'Normal'
