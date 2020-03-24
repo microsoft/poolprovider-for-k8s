@@ -14,6 +14,7 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: 'prebansa_docker'
+    repository: 'prebansa/myagent'
     command: 'build'
     Dockerfile: '**/Dockerfile'
 
