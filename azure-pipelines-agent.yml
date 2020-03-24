@@ -18,8 +18,8 @@ steps:
     command: 'buildAndPush'
     Dockerfile: 'agent-custom/Dockerfile'
     buildContext: 'agent-custom'
-
-- task: PublishPipelineArtifact@1
+- task: ComponentGovernanceComponentDetectionPpe@0
   inputs:
-    targetPath: '$(Pipeline.Workspace)'
-    publishLocation: 'pipeline'
+    scanType: 'Register'
+    verbosity: 'Normal'
+    alertWarningLevel: 'High'
