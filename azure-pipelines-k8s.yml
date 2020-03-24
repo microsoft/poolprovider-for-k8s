@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- none
+- azure-pipelines-cg1
 
 pool:
   vmImage: 'ubuntu-latest'
