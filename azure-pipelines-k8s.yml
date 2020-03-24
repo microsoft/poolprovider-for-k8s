@@ -16,3 +16,9 @@ steps:
     containerRegistry: 'prebansa_docker'
     command: 'build'
     Dockerfile: '**/Dockerfile'
+
+- task: ComponentGovernanceComponentDetectionPPE@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
