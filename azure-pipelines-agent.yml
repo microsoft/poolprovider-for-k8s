@@ -10,14 +10,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Docker@2
-  displayName: buildAndPush
-  inputs:
-    containerRegistry: 'prebansa_docker'
-    repository: 'prebansa/myagent'
-    command: 'build'
-    Dockerfile: 'agent-custom/Dockerfile'
-    buildContext: 'agent-custom'
 
 - task: Docker@2
   inputs:
@@ -29,4 +21,5 @@ steps:
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
+    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
     alertWarningLevel: 'High'
