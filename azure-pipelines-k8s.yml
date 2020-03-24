@@ -14,11 +14,13 @@ steps:
   displayName: buildAndPush
   inputs:
     containerRegistry: 'prebansa_docker'
-    command: 'build'
+    repository: 'prebansa/myagent'
+    command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
 - task: ComponentGovernanceComponentDetection@0
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
+    dockerImagesToScan: '$(Build.BuildId)'
     alertWarningLevel: 'High'
