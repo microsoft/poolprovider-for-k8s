@@ -15,7 +15,7 @@ steps:
   inputs:
     containerRegistry: 'prebansa_docker'
     repository: 'prebansa/myagent'
-    command: 'build'
+    command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
 - task: ComponentGovernanceComponentDetection@0
