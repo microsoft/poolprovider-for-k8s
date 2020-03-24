@@ -19,6 +19,12 @@ steps:
     Dockerfile: 'agent-custom/Dockerfile'
     buildContext: 'agent-custom'
 
+- task: Docker@2
+  inputs:
+    containerRegistry: 'prebansa_docker'
+    command: 'build'
+    Dockerfile: '**/Dockerfile'
+
 - task: ComponentGovernanceComponentDetection@0
   inputs:
     scanType: 'Register'
