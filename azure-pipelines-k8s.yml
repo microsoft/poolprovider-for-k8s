@@ -17,7 +17,7 @@ steps:
     command: 'build'
     Dockerfile: '**/Dockerfile'
 
-- task: ComponentGovernanceComponentDetectionPPE@0
+- task: ComponentGovernanceComponentDetection@0
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
