@@ -17,10 +17,3 @@ steps:
     repository: 'prebansa/myagent'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
-
-- task: ComponentGovernanceComponentDetection@0
-  inputs:
-    scanType: 'LogOnly'
-    verbosity: 'Verbose'
-    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
-    alertWarningLevel: 'Medium'
