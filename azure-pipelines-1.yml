@@ -7,7 +7,7 @@ trigger:
 - azure-pipelines-sleep
 
 pool:
-  name: 'newrepotest'
+  name: 'newrepotest1'
 
 steps:
 - task: Bash@3
