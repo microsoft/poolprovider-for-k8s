@@ -36,5 +36,5 @@ steps:
       
       cd helm
       
-      ./setup.sh -u true -s sharedsecret1234 -d azure$(poolname)
+      ./setup.sh -u true -s secret1234 -d azure$(poolname)
 
