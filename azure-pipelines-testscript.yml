@@ -21,7 +21,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       
-      az aks get-credentials --name aksKodey --resource-group kodey-bugbash-rg
+      az aks get-credentials --name aksKodey --resource-group aksKodey-rg
       
 - task: HelmInstaller@1
   inputs:
