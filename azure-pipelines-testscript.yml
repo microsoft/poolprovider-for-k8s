@@ -16,7 +16,7 @@ variables:
 steps:
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: 'az aks get-credentials --name aksKodey --resource-group aksKodey-rg'
@@ -27,7 +27,7 @@ steps:
 
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'RMDev (c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+    azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
