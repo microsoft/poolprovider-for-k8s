@@ -7,8 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
-	v1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
-	v1controller "github.com/microsoft/k8s-poolprovider/pkg/controller/azurepipelinespool"
+	v1alpha1 "github.com/microsoft/poolprovider-for-k8s/pkg/apis/dev/v1alpha1"
+	v1controller "github.com/microsoft/poolprovider-for-k8s/pkg/controller/azurepipelinespool"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 

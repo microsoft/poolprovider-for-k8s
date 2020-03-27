@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	v1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
+	v1alpha1 "github.com/microsoft/poolprovider-for-k8s/pkg/apis/dev/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

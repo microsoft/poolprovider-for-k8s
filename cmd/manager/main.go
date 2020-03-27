@@ -8,8 +8,8 @@ import (
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/microsoft/k8s-poolprovider/pkg/apis"
-	"github.com/microsoft/k8s-poolprovider/pkg/controller"
+	"github.com/microsoft/poolprovider-for-k8s/pkg/apis"
+	"github.com/microsoft/poolprovider-for-k8s/pkg/controller"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"

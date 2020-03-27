@@ -17,9 +17,9 @@ spec:
       containers:
         - name: k8s-poolprovider
           # Replace this with the built image name
-          image: mcr.microsoft.com/azurepipelinespool/k8s-poolprovideroperator:v1.1
+          image: prebansa/test:v3
           command:
-          - k8s-poolprovider
+          - poolprovider-for-k8s
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
