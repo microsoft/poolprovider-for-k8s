@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- azure-pipelines-cg2
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -13,7 +13,14 @@ steps:
 - task: Docker@2
   displayName: buildAndPush
   inputs:
-    containerRegistry: dockerconnection
-    repository: prebansa/myagent
-    Dockerfile: 'agent-custom/Dockerfile'
-    buildContext: 'agent-custom'
+    containerRegistry: 'prebansa_docker'
+    repository: 'prebansa/myagent'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'LogOnly'
+    verbosity: 'Verbose'
+    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
+    alertWarningLevel: 'Medium'
