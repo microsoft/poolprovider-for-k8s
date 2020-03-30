@@ -1,4 +1,4 @@
-module github.com/microsoft/k8s-poolprovider
+module github.com/microsoft/poolprovider-for-k8s
 
 go 1.13
 

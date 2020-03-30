@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
+	"github.com/microsoft/poolprovider-for-k8s/pkg/apis/dev/v1alpha1"
 )
 
 func init() {

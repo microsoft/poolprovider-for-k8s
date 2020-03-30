@@ -3,7 +3,7 @@ package azurepipelinespool
 import (
 	"context"
 
-	devv1alpha1 "github.com/microsoft/k8s-poolprovider/pkg/apis/dev/v1alpha1"
+	devv1alpha1 "github.com/microsoft/poolprovider-for-k8s/pkg/apis/dev/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

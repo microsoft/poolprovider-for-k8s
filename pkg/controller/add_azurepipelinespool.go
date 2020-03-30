@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/microsoft/k8s-poolprovider/pkg/controller/azurepipelinespool"
+	"github.com/microsoft/poolprovider-for-k8s/pkg/controller/azurepipelinespool"
 )
 
 func init() {
