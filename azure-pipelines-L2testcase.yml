@@ -1,0 +1,336 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+variables:
+  poolname: '$(Build.BuildId)'
+  URI: 'https://dev.azure.com/bansalpreeti1'
+  projectname: 'k8'
+  targetSize: '1'
+
+stages:
+- stage: Deploy_Pool_Provider_Agent
+  jobs:
+
+  ################################################################################
+  - job: Configure_poolprovider
+  ################################################################################
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: '3.0.3'
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'init'
+          upgradeTiller: false
+          waitForExecution: false
+
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'install'
+          chartType: 'FilePath'
+          chartPath: 'helm/k8s-poolprovidercrd'
+          releaseName: 'k8spoolprovidercrd'
+          overrideValues: 'azurepipelines.VSTS_SECRET=$(sharedSecret)'
+          valueFile: 'helm/k8s-poolprovidercrd/values.yaml'
+          waitForExecution: false
+
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'apply'
+          arguments: '-f helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml'
+
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Write your commands here
+            
+            echo 'Sleep for 10 sec'
+            
+            sleep 10
+
+      - task: AzureCLI@1
+        inputs:
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az aks get-credentials --name testop1 --resource-group processmonitor-rg
+            helm repo add stable https://kubernetes-charts.storage.googleapis.com
+            
+            helm repo update
+            
+            helm install stable/nginx-ingress --generate-name --namespace azuredevops
+            
+            sleep 70
+            
+            
+            ingressip=$(kubectl get service -l app=nginx-ingress --namespace=azuredevops -o=jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+            echo "nginx ingress ip is " $ingressip
+            
+            dnsname="azure$(poolname)"
+            
+            publicpid=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$ingressip')].[id]" --output tsv)
+            
+            # Update public ip address with DNS name
+            response=$(az network public-ip update --ids $publicpid --dns-name $dnsname )
+            
+            fqdn=`echo $response | jq '.dnsSettings.fqdn'`
+            
+            echo $fqdn
+            
+            # Install the CustomResourceDefinition resources separately
+            kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
+            
+            # Create the namespace for cert-manager
+            kubectl create namespace cert-manager
+            
+            # Label the cert-manager namespace to disable resource validation
+            kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+            
+            # Add the Jetstack Helm repository
+            helm repo add jetstack https://charts.jetstack.io
+            
+            # Update your local Helm chart repository cache
+            helm repo update
+            
+            # Install the cert-manager Helm chart
+            helm install --name-template cert-manager --namespace cert-manager --version v0.8.0 jetstack/cert-manager
+            
+            sleep 70
+            
+            #helm install helm/k8s-certmanager --name-template='releasecert-$(Build.BuildId)' --set "configvalues.dnsname=$fqdn"
+
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'install'
+          chartType: 'FilePath'
+          chartPath: 'helm/k8s-certmanager'
+          releaseName: 'k8spoolprovidercert'
+          overrideValues: 'configvalues.dnsname=azure$(poolname).southindia.cloudapp.azure.com'
+          valueFile: 'helm/k8s-certmanager/values.yaml'
+          waitForExecution: false
+       
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "Executing powershell script"
+                     
+            $ip="https://azure$(poolname).southindia.cloudapp.azure.com"
+                     
+                        echo $ip
+                     
+                        $body = @{
+                           "name"="$(poolname)"
+                           "type"="Ignore"
+                           "acquireAgentEndpoint"="$($ip)/acquire"
+                           "releaseAgentEndpoint"="$($ip)/release"
+                           "sharedSecret"="$(sharedSecret)"
+                         } | ConvertTo-Json
+                     
+                        $header = @{
+                          "Accept"="application/json"
+                          "Authorization"="Basic $(pat)"
+                          "Content-Type"="application/json"
+                         } 
+                     
+                        $response = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/agentclouds?api-version=5.0-preview" -Method 'Post' -Body $body -Headers $header
+                        
+                        Write-Host $response
+                     
+                        $jsonObj = ConvertFrom-Json $([String]::new($response.Content))
+                     
+                        Write-Host $jsonObj.agentCloudId
+                     
+                        $body1 = @{
+                           "name"="$(poolname)"
+                           "agentCloudId"=$jsonObj.agentCloudId
+                           "targetSize"=$(targetSize)
+                         } | ConvertTo-Json
+                     
+                         $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
+                         Write-Host $response1
+                         $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
+                         $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
+                    
+                         Write-Host $response2
+                    
+                         $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
+                    
+                         $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
+                    
+                         Write-Host "QueueId is ". $queueId
+                    
+                        $body3 = @()
+                        $body3 += [pscustomobject]@{
+                          "authorized"="true"
+                          "id"="$queueId"
+                          "name"="$(Build.BuildId)"
+                          "type"="queue"   
+                        }
+                        
+                        $here1 = ConvertTo-Json -InputObject @( $body3 )
+                        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $here1 -Headers $header
+                    
+                        Write-Host $response4       
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'ls'
+
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
+              # Write your commands here
+              
+              echo 'Hello world'
+              
+              sleep 120
+  
+- stage: Connect_with_agent_created_in_first_stage 
+  jobs:
+
+  ################################################################################
+  - job: Connect_with_agent
+  ################################################################################
+    pool:
+      name: '$(Build.BuildId)'
+
+    steps:
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Write your commands here
+          
+            echo 'Hello world in agent'
+            which buildctl
+
+      - task: ContainerBuild@0
+        inputs:
+          repository: 'prebansa/testbuildctl'
+          Dockerfile: 'Dockerfile'
+      
+- stage: Cleanup_test_rsources 
+  jobs:
+
+  ################################################################################
+  - job: Clean_resources_created_for_test
+  ################################################################################
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+      
+            Write-Host "Hello World"
+            
+            $header = @{
+              "Accept"="application/json"
+              "Authorization"="Basic $(base64encodedpat)"
+              "Content-Type"="application/json"
+             } 
+         
+             $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
+        
+             Write-Host $response2
+        
+             $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
+        
+             $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
+        
+             Write-Host "QueueId is ". $queueId
+             $url = "$(URI)/$(projectname)/_apis/distributedtask/queues/$($queueId)?api-version=5.0-preview"
+            
+             Write-Host "Delete url is ". $url
+             $response = Invoke-WebRequest -Uri $url -Method 'Delete' -Headers $header
+            
+             Write-Host $response
+             Write-Host 'Deleted Agent Pool'
+
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: '3.0.3'
+
+      - task: AzureCLI@1
+        inputs:
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az aks get-credentials --name testop1 --resource-group processmonitor-rg
+            kubectl delete azurepipelinespool azurepipelinespool-operator -n azuredevops
+
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'delete'
+          arguments: 'cert-manager -n cert-manager'
+      
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'delete'
+          arguments: 'k8spoolprovidercert'
+    
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'delete'
+          arguments: 'k8spoolprovidercrd'
+    
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          azureResourceGroup: 'processmonitor-rg'
+          kubernetesCluster: 'testop1'
+          command: 'ls'
+    
+      - task: AzureCLI@1
+        inputs:
+          azureSubscription: 'RMDev(c00d16c7-6c1f-4c03-9be1-6934a4c49682)'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az aks get-credentials --name testop1 --resource-group processmonitor-rg
+            kubectl delete namespace cert-manager
+            kubectl delete customresourcedefinition azurepipelinespools.dev.azure.com
