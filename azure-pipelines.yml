@@ -38,7 +38,7 @@ stages:
                            "type"="Ignore"
                            "acquireAgentEndpoint"="$($ip)/acquire"
                            "releaseAgentEndpoint"="$($ip)/release"
-                           "sharedSecret"="$(sharedSecret)"
+                           "sharedSecret"="sharedsecret1234"
                          } | ConvertTo-Json
                      
                         $header = @{
