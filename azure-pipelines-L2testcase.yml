@@ -154,7 +154,7 @@ stages:
                      
                         $header = @{
                           "Accept"="application/json"
-                          "Authorization"="Basic $(encodedpat)"
+                          "Authorization"="Basic $(base64encodedpat)"
                           "Content-Type"="application/json"
                          } 
                      
@@ -258,7 +258,7 @@ stages:
             
             $header = @{
               "Accept"="application/json"
-              "Authorization"="Basic $(encodedpat)"
+              "Authorization"="Basic $(base64encodedpat)"
               "Content-Type"="application/json"
              } 
          
