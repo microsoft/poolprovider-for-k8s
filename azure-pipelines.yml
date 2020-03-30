@@ -6,14 +6,83 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
+variables:
+  poolname: '$(Build.BuildId)'
+  URI: 'https://dev.azure.com/bansalpreeti1'
+  projectname: 'k8'
+  targetSize: '1'
 
-steps:
-- task: Docker@2
-  displayName: buildAndPush
-  inputs:
-    containerRegistry: dockerconnection
-    repository: prebansa/myagent
-    Dockerfile: 'agent-custom/Dockerfile'
-    buildContext: 'agent-custom'
+stages:
+- stage: Deploy_Pool_Provider_Agent
+  jobs:
+
+  ################################################################################
+  - job: Configure_poolprovider
+  ################################################################################
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "Executing powershell script"
+                     
+            $ip="https://azure1495.southindia.cloudapp.azure.com"
+                     
+                        echo $ip
+                     
+                        $body = @{
+                           "name"="$(poolname)"
+                           "type"="Ignore"
+                           "acquireAgentEndpoint"="$($ip)/acquire"
+                           "releaseAgentEndpoint"="$($ip)/release"
+                           "sharedSecret"="$(sharedSecret)"
+                         } | ConvertTo-Json
+                     
+                        $header = @{
+                          "Accept"="application/json"
+                          "Authorization"="Basic $(pat)"
+                          "Content-Type"="application/json"
+                         } 
+                     
+                        $response = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/agentclouds?api-version=5.0-preview" -Method 'Post' -Body $body -Headers $header
+                        
+                        Write-Host $response
+                     
+                        $jsonObj = ConvertFrom-Json $([String]::new($response.Content))
+                     
+                        Write-Host $jsonObj.agentCloudId
+                     
+                        $body1 = @{
+                           "name"="$(poolname)"
+                           "agentCloudId"=$jsonObj.agentCloudId
+                           "targetSize"=$(targetSize)
+                         } | ConvertTo-Json
+                     
+                         $response1 = Invoke-WebRequest -Uri "$(URI)/_apis/distributedtask/pools?api-version=5.0-preview" -Method 'Post' -Body $body1 -Headers $header
+                         Write-Host $response1
+                         $jsonObj1 = ConvertFrom-Json $([String]::new($response1.Content))
+                         $response2 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_settings/agentqueues?__rt=fps&__ver=2" -Method 'Get'  -Headers $header
+                    
+                         Write-Host $response2
+                    
+                         $queuejsonObj = ConvertFrom-Json $([String]::new($response2.Content))
+                    
+                         $queueId = $queuejsonObj.fps.dataProviders.data.'ms.vss-build-web.agent-queues-data-provider'.taskAgentQueues.Where({$_.name -eq $(Build.BuildId)}).id
+                    
+                         Write-Host "QueueId is ". $queueId
+                    
+                        $body3 = @()
+                        $body3 += [pscustomobject]@{
+                          "authorized"="true"
+                          "id"="$queueId"
+                          "name"="$(Build.BuildId)"
+                          "type"="queue"   
+                        }
+                        
+                        $here1 = ConvertTo-Json -InputObject @( $body3 )
+                        $response4 = Invoke-WebRequest -Uri "$(URI)/$(projectname)/_apis/build/authorizedresources?api-version=5.0-preview" -Method 'Patch' -Body $here1 -Headers $header
+                    
+                        Write-Host $response4       
