@@ -154,7 +154,7 @@ stages:
                      
                         $header = @{
                           "Accept"="application/json"
-                          "Authorization"="Basic $(base64encodedpat)"
+                          "Authorization"="Basic $(pat)"
                           "Content-Type"="application/json"
                          } 
                      
