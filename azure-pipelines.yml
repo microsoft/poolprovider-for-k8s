@@ -20,7 +20,6 @@ steps:
 
 - task: ComponentGovernanceComponentDetection@0
   inputs:
-    scanType: 'Register'
+    scanType: 'LogOnly'
     verbosity: 'Verbose'
-    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
     alertWarningLevel: 'High'
