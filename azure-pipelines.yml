@@ -18,9 +18,6 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
-- task: ComponentGovernanceComponentDetection@0
+- task: ComponentGovernancePackageScanner@0
   inputs:
-    scanType: 'Register'
-    verbosity: 'Verbose'
-    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
-    alertWarningLevel: 'Medium'
+    Verbose: true
