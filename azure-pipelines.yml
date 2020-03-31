@@ -18,7 +18,7 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
-- task: ComponentGovernanceComponentDetectionPpe@0
+- task: ComponentGovernanceComponentDetectionPPE@0
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
