@@ -22,4 +22,5 @@ steps:
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
+    dockerImagesToScan: 'prebansa/myagent:$(Build.BuildId)'
     alertWarningLevel: 'High'
