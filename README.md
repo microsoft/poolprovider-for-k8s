@@ -10,8 +10,8 @@ The k8s-poolprovider uses Kubernetes cluster as the build infrastructure.
 
 This repository consists implementation of two major helm charts -
 #### 1. k8s-poolprovidercrd :
-This helm chart installs all the resources required for configuring Kubernetes poolprovider resources on the Kuberenetes cluster. It first installs the controller implemented using Operator-SDK. This is required for lifecycle management of poolprovider resources deployed in the cluster. As soon as user applies the custom resource yaml i.e. [azurepipelinespool_cr.yaml](https://github.com/microsoft/k8s-poolprovider/blob/prebansa-readme/helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml); the controller instantiates multiple external resources like webserver deployment, service, buildkit pods etc. The controller handles the reinitialization and reconfiguration at runtime if any changes are observed in the configured instances.
-  User can make changes to Custom resource file i.e. azurepipelinespool_cr.yaml as per requirements. In this file user can add modified controller container image, change the number of buildkit pods instances and add the customised agent container images, refer this [CRD](https://github.com/microsoft/k8s-poolprovider/blob/master/helm/k8s-poolprovidercrd/templates/azurepipelinespools_crd.yaml) specification.
+This helm chart installs all the resources required for configuring Kubernetes poolprovider resources on the Kuberenetes cluster. It first installs the controller implemented using Operator-SDK. This is required for lifecycle management of poolprovider resources deployed in the cluster. As soon as user applies the custom resource yaml i.e. [azurepipelinespool_cr.yaml](https://github.com/microsoft/poolprovider-for-k8s/blob/prebansa-readme/helm/k8s-poolprovidercrd/azurepipelinescr/azurepipelinespool_cr.yaml); the controller instantiates multiple external resources like webserver deployment, service, buildkit pods etc. The controller handles the reinitialization and reconfiguration at runtime if any changes are observed in the configured instances.
+  User can make changes to Custom resource file i.e. azurepipelinespool_cr.yaml as per requirements. In this file user can add modified controller container image, change the number of buildkit pods instances and add the customised agent container images, refer this [CRD](https://github.com/microsoft/poolprovider-for-k8s/blob/master/helm/k8s-poolprovidercrd/templates/azurepipelinespools_crd.yaml) specification.
 
 #### 2. k8s-certmanager :
 This helm chart installs different resources required for configuring the load balancer endpoint with https support.
@@ -89,3 +89,5 @@ Note : As part of setup script we bind the public ip of ingress with the DNS nam
         DNSName : Same DNS name with which the key and secrets are generated
         Sharedsecret : Secret value having atleast 16 characters; needs to be xact same value as provided while configuring the cluster
         TargetSize : Target parallelism required in agent pool
+
+> This repo will have telemetry enabled at a later point of time to monitor usage of this task by individuals/organisations.
