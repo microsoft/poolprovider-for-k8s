@@ -7,7 +7,7 @@ trigger:
 - none
 
 pool:
-  name: 'poolprovide1'
+  name: 'poolprovide2'
 
 steps:
 - task: Bash@3
